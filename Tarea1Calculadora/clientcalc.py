@@ -12,11 +12,20 @@ socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
 
 
-menu = '1.sum 2.rest'
-print(menu)
-selector = str(input())
-
-socket.send_string(selector)
-#Ahora recibimos el mensaje de vuelta del servidor y lo almacenamos
-response = socket.recv_string()
-print(f'la respuesta es: {response}')
+while True:
+    menu = '1.sum\n2.rest\n3.multip\n4.div'
+    print(menu)
+    selector = str(input())
+    socket.send_string(selector)
+    #Ahora recibimos el mensaje de vuelta del servidor y lo almacenamos
+    response1 = socket.recv_string()
+    print(response1)
+    num1 = str(input())
+    socket.send_string(num1)
+    response2 = socket.recv_string()
+    print(response2)
+    num2 = str(input())
+    socket.send_string(num2)
+    result = socket.recv_string()
+    print(result)
+    print('-------FIN------\n\n')
