@@ -1,12 +1,8 @@
-#   Hello World client en Python
-#   envia, solcicita mensaje
-#   connect (envía, solicita)
 import zmq
 import sys
 import time
 import json
-
-
+#Creamos un contexto de sockets
 context = zmq.Context()
 # creamos un socket como la variable s
 # REQ (REQUEST) establece el protocolo con el que interactuan los componentes
@@ -15,11 +11,11 @@ s = context.socket(zmq.REQ)
 #localhost-> sistema operativo
 #quiero CONECTAR esta máquina en el puerto 5555 por medio del S.O localhost
 s.connect('tcp://localhost:5555')
-# guardamos un argumento (DESDE LA LINEA DE COMANDOS) y lo guardamos en message
+# guardamos un argumento (DESDE LA LINEA DE COMANDOS) y lo guardamos en un JSON
 numero1 = sys.argv[1]
 operacion = sys.argv[2]
 numero2 = sys.argv[3]
-
+#usamos json.dumps para convertir la informacion a JSON
 request_json = json.dumps(
     {
     "operador1":numero1,
@@ -27,13 +23,9 @@ request_json = json.dumps(
     "operador2":numero2
 }
 )
-
-print(type(request_json))
-
-# json_object = json.loads(request_json) 
+#enviamos el objeto json al servidor y esperamos la respuesta
 s.send_json(request_json)
-
-#Recibimos un json
-response = s.recv_json()
-#Imprimimos como json
+#Recibimos un string como respuesta
+response = s.recv_string()
+#Imprimimos el resultado devuelto por el servidor
 print(response)
