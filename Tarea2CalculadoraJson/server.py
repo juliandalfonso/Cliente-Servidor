@@ -4,6 +4,7 @@
 #   bind(escucha) 
 #
 #llamamos la libreria zmq permite crear nuestra propia infraestructura de mensajes (sockets)
+from typing import Dict
 import zmq
 #importamos la libreria para leer json
 import json
@@ -17,13 +18,15 @@ x.bind('tcp://*:5555')
 
 i=0
 while True:    
-    # Espera un mensaje del cliente y lo almacena en m
-    request_json = x.recv_json()
-    
-    print(type(request_json))
+    # Recibo un JSON
+    request_json = x.recv_json()    
     
     
-    #una vez recibido el mensaje, imprime Servidor recibe y
-    # el mensaje de la linea de comandos
-    print(request_json)    
+    request_dict = json.loads(request_json)
+    print("la operacion es: ", request_dict["operacion"])
+    
+    #lo convertimos nuevamente a json y lo imprimimos
+    print(type(json.dumps(request_json)))
+    
+    # Lo enviamos como json
     x.send_json(request_json)

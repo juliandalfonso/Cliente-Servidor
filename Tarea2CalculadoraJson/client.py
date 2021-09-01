@@ -20,13 +20,20 @@ numero1 = sys.argv[1]
 operacion = sys.argv[2]
 numero2 = sys.argv[3]
 
-request_json = """{
+request_json = json.dumps(
+    {
     "operador1":numero1,
     "operacion":operacion,
     "operador2":numero2
-}"""
+}
+)
 
 print(type(request_json))
+
+# json_object = json.loads(request_json) 
 s.send_json(request_json)
+
+#Recibimos un json
 response = s.recv_json()
+#Imprimimos como json
 print(response)
