@@ -4,7 +4,7 @@ import zmq
 # Necesitamos un contexto para correr sockets
 context = zmq.Context()
 
-# Creamos el socket
+# Creamos el socket (REPLY)- RESPONSE
 socket = context.socket(zmq.REP)
 
 # Escuchamos en el puerto 5555
@@ -42,28 +42,25 @@ def divi():
     num2 = socket.recv_string()
     result = int(num1) / int(num2)
     socket.send_string(f'la respuesta es: {result}')
+
+
 # Ciclo que mantiene el server escuchando siempre
-while True:
-    
+while True:  
     # Almacenamos el mensaje que reciba del cliente
     mensaje = socket.recv_string()
     # Imprimimos el mensaje recibido
     print('server recibe' + ' ' + mensaje)
     #procesamos el mensaje
     if mensaje=='1':
+         suma()
     
-        suma()
-    
-    elif mensaje=='2':
-    
+    elif mensaje=='2': 
         resta()
         
     elif mensaje=='3':
-    
         multi()
     
     elif mensaje=='4':
-    
         divi()
     else:
         socket.send_string('error')
