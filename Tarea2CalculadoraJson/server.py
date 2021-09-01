@@ -13,10 +13,8 @@ x.bind('tcp://*:5555')
 while True:    
     # Recibo un JSON desde el cliente
     request_json = x.recv_json()    
-    
     #convierto el JSON a diccionario
     request_dict = json.loads(request_json)
-    
     #logica del programa
     if request_dict["operacion"] == '+':
         #convierto a entero y lo  guardo en op1 y op2 
