@@ -23,7 +23,7 @@ def menu():
 
 def JSON_crear():
     nombre = input("\nnombre: ")
-    saldo = input("saldo: ")
+    saldo = int(input("saldo: "))
     crear = json.dumps(
             {
                 "tipo" : "crear",
@@ -42,25 +42,22 @@ def JSON_mostrar():
             }
         )
     return mostrar
-    
-'''
-transferir = json.dumps(
-    
-    {
-        "solicitud": transferir,
-        "remitente": remitente,
-        "destinatario" : destinatario,
-        "saldo": saldo
-    }
-)
 
-mostrar = json.dumps(
-    {
-        "solicitud" : mostrar,
-        "nombre": nombre
-    }
-)
-'''     
+def JSON_transferir():
+    remitente = input("\nremitente: ")
+    destinatario = input("\ndestinatario: ")
+    saldo = int(input("\nsaldo: "))
+    
+    mostrar = json.dumps(
+            {
+                "tipo": 'transf',
+                "remitente": remitente,
+                "destinatario" : destinatario,
+                "saldo": saldo
+            }
+        )
+    return mostrar
+    
 
 while True:
     
@@ -71,7 +68,8 @@ while True:
         socket.send_json(request_crear)
         
     elif selector == '2':
-        print('transf')
+        request_transferir = JSON_transferir()
+        socket.send_json(request_transferir) 
         
     elif selector == '3':
         request_mostrar = JSON_mostrar()

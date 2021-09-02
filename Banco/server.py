@@ -28,7 +28,24 @@ while True:
         socket.send_string(response)
         
     elif request_dict["tipo"] == 'transf':
-        pass
+        
+        remitente = request_dict["remitente"]
+        destinatario = request_dict["destinatario"]
+        saldo = request_dict["saldo"]
+
+        #logica de la transferencia
+        #creamos una nueva lista y la actualizamos al DATABASE
+        nuevo_saldo_remitente = DATABASE[remitente]-saldo
+        nuevo_remitente = {remitente : nuevo_saldo_remitente}
+        DATABASE.update(nuevo_remitente)
+        
+        nuevo_saldo_destinatario = DATABASE[destinatario]+saldo
+        nuevo_destinatario = {destinatario : nuevo_saldo_destinatario}
+        DATABASE.update(nuevo_destinatario)
+        
+        response= f'\nTransferencia de {remitente} a {destinatario} por {saldo}\n'
+        socket.send_string(response)
+        
     elif request_dict["tipo"] == 'mostrar':
         nombre = request_dict["nombre"]
         response= f'\nEl saldo de {nombre} es: {DATABASE[nombre]}\n'
