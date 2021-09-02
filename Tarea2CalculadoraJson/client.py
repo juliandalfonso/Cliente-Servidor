@@ -1,6 +1,5 @@
 import zmq
 import sys
-import time
 import json
 #Creamos un contexto de sockets
 context = zmq.Context()
@@ -12,9 +11,9 @@ s = context.socket(zmq.REQ)
 #quiero CONECTAR esta máquina en el puerto 5555 por medio del S.O localhost
 s.connect('tcp://localhost:5555')
 # guardamos un argumento (DESDE LA LINEA DE COMANDOS) y lo guardamos en un JSON
-numero1 = sys.argv[1]
+numero1 = int(sys.argv[1])
 operacion = sys.argv[2]
-numero2 = sys.argv[3]
+numero2 = int(sys.argv[3])
 #usamos json.dumps para convertir la informacion a JSON
 request_json = json.dumps(
     {
