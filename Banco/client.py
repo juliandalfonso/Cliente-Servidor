@@ -16,7 +16,7 @@ socket.connect('tcp://localhost:5555')
 # transferir gustavo 10mil julian
 # gustavo saldo
 def menu():
-    print('1.Crear cuenta\n2.Transferir saldo\n3.Mostrar saldo\n4.Depositar saldo\n3.Retirar saldo')
+    print('1.Crear cuenta\n2.Transferir saldo\n3.Mostrar saldo\n4.Depositar saldo\n5.Retirar saldo')
     print('Seleccione una opcion: ')
     selector = str(input())
     return selector
