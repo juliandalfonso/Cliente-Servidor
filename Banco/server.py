@@ -21,18 +21,21 @@ while True:
     if request_dict["tipo"] == 'crear':
         #creamos un nuevo objeto en python
         nombre = request_dict["nombre"]
-        saldo = request_dict["saldo"]
-        nuevo_dato = {nombre:saldo}
-        DATABASE.update(nuevo_dato)
-        response = f'\nagregado->{nombre} con saldo {DATABASE[nombre]}\n'
-        socket.send_string(response)
+        saldo = request_dict["saldo"]  
+        #verificamos la existencioa del nuevo contacto
+        if nombre in DATABASE:
+            socket.send_string('\nUsuario Ya Existente')
+        else:
+            nuevo_dato = {nombre:saldo}
+            DATABASE.update(nuevo_dato)
+            response = f'\nagregado->{nombre} con saldo {DATABASE[nombre]}\n'
+            socket.send_string(response)
         
     elif request_dict["tipo"] == 'transf':
         
         remitente = request_dict["remitente"]
         destinatario = request_dict["destinatario"]
         saldo = request_dict["saldo"]
-
         #logica de la transferencia
         #creamos una nueva lista y la actualizamos al DATABASE
         nuevo_saldo_remitente = DATABASE[remitente]-saldo
@@ -49,6 +52,22 @@ while True:
     elif request_dict["tipo"] == 'mostrar':
         nombre = request_dict["nombre"]
         response= f'\nEl saldo de {nombre} es: {DATABASE[nombre]}\n'
+        socket.send_string(response)
+    
+    elif request_dict["tipo"] == 'deposito':
+        nombre = request_dict["nombre"]
+        nuevo_saldo = DATABASE[nombre]+request_dict["saldo"]
+        depositado = {nombre:nuevo_saldo}
+        DATABASE.update(depositado)
+        response= f'\nNuevo saldo de {nombre} es {DATABASE[nombre]}\n'
+        socket.send_string(response)
+    
+    elif request_dict["tipo"] == 'retirar':
+        nombre = request_dict["nombre"]
+        nuevo_saldo = DATABASE[nombre]-request_dict["retiro"]
+        retirado = {nombre:nuevo_saldo}
+        DATABASE.update(retirado)
+        response= f'\nNuevo saldo de {nombre} es {DATABASE[nombre]}\n'
         socket.send_string(response)
     else:
         print('error')

@@ -16,7 +16,7 @@ socket.connect('tcp://localhost:5555')
 # transferir gustavo 10mil julian
 # gustavo saldo
 def menu():
-    print('1.Crear cuenta\n2.Transferir saldo\n3.Mostrar saldo')
+    print('1.Crear cuenta\n2.Transferir saldo\n3.Mostrar saldo\n4.Depositar saldo\n3.Retirar saldo')
     print('Seleccione una opcion: ')
     selector = str(input())
     return selector
@@ -57,6 +57,32 @@ def JSON_transferir():
             }
         )
     return mostrar
+
+def JSON_depositar():
+    nombre = input("\nnombre: ")
+    saldo = int(input("\nsaldo a depositar: "))
+    
+    depositar = json.dumps(
+            {
+                "tipo": 'deposito',
+                "nombre": nombre,
+                "saldo": saldo
+            }
+        )
+    return depositar
+
+def JSON_retirar():
+    nombre = input("\nnombre: ")
+    retiro = int(input("\nsaldo a retirar: "))
+    
+    retirar = json.dumps(
+            {
+                "tipo": 'retirar',
+                "nombre" : nombre,
+                "retiro": retiro
+            }
+        )
+    return retirar
     
 
 while True:
@@ -74,8 +100,16 @@ while True:
     elif selector == '3':
         request_mostrar = JSON_mostrar()
         socket.send_json(request_mostrar)        
+    
+    elif selector == '4':
+        request_depositar = JSON_depositar()
+        socket.send_json(request_depositar)        
+    
+    elif selector == '5':
+        request_retirar = JSON_retirar()
+        socket.send_json(request_retirar)        
     else:
-        print('error')
+        print('seleccion no valida')
     
     
     response = socket.recv_string()
