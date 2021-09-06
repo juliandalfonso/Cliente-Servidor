@@ -1,5 +1,5 @@
 import zmq
-import sys
+import os
 import json
 import time
 #Creamos un contexto de sockets
@@ -16,6 +16,7 @@ socket.connect('tcp://localhost:5555')
 # transferir gustavo 10mil julian
 # gustavo saldo
 def menu():
+    os.system('cls||clear')
     print('1.Crear cuenta\n2.Transferir saldo\n3.Mostrar saldo\n4.Depositar saldo\n5.Retirar saldo')
     print('Seleccione una opcion: ')
     selector = str(input())
