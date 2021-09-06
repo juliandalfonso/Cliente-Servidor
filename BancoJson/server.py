@@ -27,9 +27,9 @@ while True:
         if nombre in DATABASE:
             socket.send_string('\nUsuario Ya Existente')
         else:
-            nuevo_dato = {nombre:saldo}
+            DATABASE[nombre] = saldo
             file = open("./DATABASE.json", "w")
-            append = json.dumps(nuevo_dato)
+            append = json.dumps(DATABASE)
             file.write(append)
             file.close()
             response = f'\nagregado->{nombre} con saldo {saldo}\n'
@@ -50,12 +50,16 @@ while True:
             else:
                 #creamos una nueva lista y la actualizamos al DATABASE
                 nuevo_saldo_remitente = DATABASE[remitente]-saldo
-                nuevo_remitente = {remitente : nuevo_saldo_remitente}
-                DATABASE.update(nuevo_remitente)
+                DATABASE[remitente] = nuevo_saldo_remitente
                 
                 nuevo_saldo_destinatario = DATABASE[destinatario]+saldo
-                nuevo_destinatario = {destinatario : nuevo_saldo_destinatario}
-                DATABASE.update(nuevo_destinatario)
+                DATABASE[destinatario] = nuevo_saldo_destinatario
+                
+                file = open("./DATABASE.json", "w")
+                append = json.dumps(DATABASE)
+                file.write(append)
+                file.close()
+                
                 response= f'\nTransferencia de {remitente} a {destinatario} por {saldo}\n'
                 socket.send_string(response)
         #caso en que no exista algun usuario
