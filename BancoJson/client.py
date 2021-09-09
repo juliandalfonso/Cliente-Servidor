@@ -112,7 +112,6 @@ while True:
     else:
         print('seleccion no valida')
     
-    
     response = socket.recv_string()
     print(response)
     time.sleep(3)
