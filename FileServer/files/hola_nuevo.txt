@@ -1,2 +1,0 @@
-{"usuario": "carolina", "tipo": "upload"}
-holaaaaaaaacomoestas

@@ -28,11 +28,12 @@ def arguments():
     
     return usuario, tipo, dir_archivo
 
-def convertToJson(user, tipo):
+def convertToJson(user, tipo, file_dir):
     crearJson = json.dumps(
         {
             "usuario" : user,
-            "tipo" : tipo
+            "tipo" : tipo,
+            "filename": file_dir
         }
     )
     return crearJson
@@ -56,20 +57,14 @@ def uneJsonyArchivo(byte_json, byte_archivo):
 user, tipo, file_dir = arguments()
 
 #creamos un json con la informacion que suministra el usuario
-newjson = convertToJson(user, tipo)
-#convierto el json a binario y le agregamos un salto de linea
-byte_json = bytes(newjson, 'utf-8')
-byte_jump = bytes('\n', 'utf-8')
-jsonbinario = byte_json + byte_jump
-
+newjson = convertToJson(user, tipo, file_dir)
+jsonencoded = newjson.encode('utf-8')
 #procesa la direccion del archivo lo lee y devuelve su informacion en binario
 archivobinario = procesaArchivo(file_dir)
 
-#unimos el jsonbinario(informacion de cliente) y el archivo en binario
-request = uneJsonyArchivo(jsonbinario, archivobinario)
-
 #enviamos la peticion al server
-socket.send(request)
+socket.send_multipart([jsonencoded, archivobinario])
+# odkcet.send_multipart([newjson.encode('utf-8'), archivobinario])
 #esperamos la respuesta y la imprimimos
 response = socket.recv_string()
 print(response)
