@@ -1,10 +1,10 @@
 
 #todo:--------------------------------------------------
     #UPLOAD-----------#!LISTO
-        #por mejorar: archivo se repite en DB si ya existe
+        #por mejorar: archivo se repite en DB si ya existe#!LISTO
     #DOWNLOADLINK-----#!LISTO
     
-    #SHARELINK--------#!FALTA
+    #SHARELINK--------#!LISTO
         #funcion que encuentre el archivo y devuelva su link
             #link = buscaArchivo(filename)
             #responder string al cliente
@@ -26,6 +26,8 @@ socket = context.socket(zmq.REP)
 socket.bind('tcp://*:5555')
 #-----------Conexion con CLIENT-------------
 
+
+#?-----------------------------FUNCIONES-----------------------------------------
 def leeDATABASE():
     file = open("./DATABASE.json", "r")
     data=file.read()
@@ -50,7 +52,7 @@ def nuevoUsuario(json_dic, link):
     newuser =   { nombre : {link : filename}}
     return newuser
 
-def guardaArchivo(archivo, json_dict):
+def guardaArchivo(json_dic, archivo):
     #crea un directorio con el nombre del usuario y el archivo
     # /files/usuario/archivo.txt
     newfilepath = './files/'+json_dic["usuario"]+'/'+json_dic["filename"]
@@ -75,7 +77,6 @@ def checkFilename(json_dict, DATABASE):
                 existe = True
     return existe
                
-
 def upload():
     #creamos un nuevo objeto en python
     nombre = json_dic["usuario"]
@@ -93,8 +94,9 @@ def upload():
         #abrimos el archivo de base de datos y lo agregamos
         actualizaDB()
         #enviamos la respuesta al cliente
-        response = f'\nSe agregó el archivo:{file_dir} al usuario {nombre}'
+        response = f'\nSe agregó el archivo:{file_dir} al usuario {nombre}\n'
         socket.send_string(response)
+        print('[SERV] archivo agregado')
         #! agregar archivo a carpeta de usuario
     
     #caso en que el usuario no esté en la BD
@@ -105,8 +107,9 @@ def upload():
         DATABASE.update(newuser)
         actualizaDB()
         #respondemos al cliente
-        response = f'\nnuevo usuario {nombre} con archivo {file_dir}'
+        response = f'\nnuevo usuario {nombre} con archivo {file_dir}\n'
         socket.send_string(response)
+        print('[SERV] usuario y carpeta creados y archivo agregado')
         
         #!crear carpeta de usuario
         #!agregar archivo a carpeta de  usuario
@@ -129,7 +132,7 @@ def download(DATABASE,dllink):
             if link == dllink:
                 nombrearchivo = filename
                 usuario = nombres
-                response = f'\nHa solicitado descargar {filename} de {nombres}'
+                response = f'\nHa solicitado descargar {filename} de {nombres}\n'
                 encontrado = True
                 
     
@@ -146,6 +149,7 @@ def download(DATABASE,dllink):
         #cargamos el archivo en file
         file = encuentraArchivo(usuario, nombrearchivo)
         socket.send_multipart([json_response_encoded,file])
+        print('[SERV] archivo enviado al cliente para descargar')
         
     else:
         response = '\nlink no encontrado'
@@ -157,9 +161,18 @@ def download(DATABASE,dllink):
         )
         json_response_encoded = json_response.encode('utf-8')
         socket.send_multipart([json_response_encoded])
+        print('[SERV] link no encontrado descarga no exitosa')
                 
-                
-            
+def shareLink(json_dic, DATABASE):
+    linkshare=''
+    nombreacompartir = json_dic["usuario"]
+    archivoacompartir = json_dic["filename"]
+    for nombres, archivos in DATABASE.items():
+        for link, filename in archivos.items():
+            if nombreacompartir == nombres and archivoacompartir == filename:
+                linkshare = link
+    return linkshare
+#?-----------------------------FUNCIONES-----------------------------------------
 
 
 
@@ -178,11 +191,22 @@ while True:
         #revisamos si el archivo existe
         existe = checkFilename(json_dic, DATABASE)
         if existe:
-            socket.send_string('\nYa existe un archivo con este nombre')
+            socket.send_string('\nYa existe un archivo con este nombre\n')
+            print('[SERV] cliente solicito agregar un archivo que ya existe')
         else:
             upload()
             archivo = mens[1]
-            guardaArchivo(archivo, json_dic)
+            guardaArchivo(json_dic, archivo)
+    
+    #caso que el cliente solicite una descarga
+    if json_dic["tipo"] == 'sharelink':
+        if checkFilename(json_dic, DATABASE):
+            linkshare = shareLink(json_dic, DATABASE)
+            socket.send_string(f'\nlink para descargar {json_dic["filename"]} es: \n    {linkshare}\n')
+            print('[SERV] link compartido')
+        else:
+            socket.send_string('archivo no encontrado')
+            print('[SERV] archivo no encontrado')
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'downloadlink':

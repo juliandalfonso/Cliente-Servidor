@@ -3,7 +3,7 @@
     
     #python client.py username upload hola.txt #!LISTO
         #crear funcionalidad upload ----------LISTO
-    #python client.py username sharelink hola.txt#!FALTA
+    #python client.py username sharelink hola.txt#!LISTO
         #crear funcionalidad sharelink
     #python client.py username downloadlink link#!LISTO
     #python client.py username list hola.txt#!FALTA
@@ -73,6 +73,13 @@ if tipo == 'upload':
     archivobinario = procesaArchivo(file_dir)
     #enviamos la peticion al server
     socket.send_multipart([jsonencoded, archivobinario])
+    #esperamos la respuesta y la imprimimos
+    response = socket.recv_string()
+    print(response)
+
+if tipo == 'sharelink':
+    #enviamos la peticion al server
+    socket.send_multipart([jsonencoded])
     #esperamos la respuesta y la imprimimos
     response = socket.recv_string()
     print(response)
