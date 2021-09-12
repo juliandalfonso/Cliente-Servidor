@@ -1,11 +1,12 @@
 
 #todo:-----------------------------------------
-    #python client.py username upload hola.txt
+    
+    #python client.py username upload hola.txt #!LISTO
         #crear funcionalidad upload ----------LISTO
-    #python client.py username sharelink hola.txt
+    #python client.py username sharelink hola.txt#!FALTA
         #crear funcionalidad sharelink
-    #python client.py username downloadlink link
-    #python client.py username list hola.txt
+    #python client.py username downloadlink link#!LISTO
+    #python client.py username list hola.txt#!FALTA
 #todo:-----------------------------------------
 
 import zmq

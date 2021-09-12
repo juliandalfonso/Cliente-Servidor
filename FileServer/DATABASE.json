@@ -1,11 +1,10 @@
 {
-    "caro": {
-        "e45f1770-d24b-4120-94e4-5311eba9900f": "hola.txt"
+    "julian": {
+        "1b82fd10-c528-4e6a-b365-2e2d72f28a81": "holajulian.txt",
+        "a0162fec-f12a-4e52-8e88-e8d5ee71584f": "despedidajuli.txt",
+        "4400c686-62c9-45db-8f6c-c852dd61f96c": "banco_profe.png"
     },
-    "juli": {
-        "24893a7e-2792-4292-b94c-8c9f8d204920": "hola.txt"
-    },
-    "nana": {
-        "b00673ac-e375-40f2-8fa8-10442d1ed58a": "hola.txt"
+    "juan": {
+        "546e32d8-8d7d-4339-b84a-6d6d8bbb44b9": "saludojuan.txt"
     }
 }

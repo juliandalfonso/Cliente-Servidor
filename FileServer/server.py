@@ -1,26 +1,16 @@
 
 #todo:--------------------------------------------------
-    #UPLOAD
-    #separar archivo json de binario (leer primera linea)
-        #convertir binario a string
-        #guardar json en una variable
-        #guardar archivo recibido
+    #UPLOAD-----------#!LISTO
+        #por mejorar: archivo se repite en DB si ya existe
+    #DOWNLOADLINK-----#!LISTO
+    
+    #SHARELINK--------#!FALTA
+        #funcion que encuentre el archivo y devuelva su link
+            #link = buscaArchivo(filename)
+            #responder string al cliente
+    #LIST-------------#!FALTA
+        #listar todos loas archivos?
 
-    #SHARELINK
-    #crear DATABASE json
-        #guardar usuario en DATABASE
-    #crear sistema de ID's personalizado para los links
-        # {
-        #     "juan":
-        #         {
-        #             "123-abc" : "./files/hola.txt",
-        #             "456-def" : "./files/song.mp3"
-        #         }
-        # }
-
-    #DOWNLOADLINK
-        #verificar existencia de link
-        #devolver archivo binario
 #todo:--------------------------------------------------
 
 
@@ -36,7 +26,13 @@ socket = context.socket(zmq.REP)
 socket.bind('tcp://*:5555')
 #-----------Conexion con CLIENT-------------
 
-
+def leeDATABASE():
+    file = open("./DATABASE.json", "r")
+    data=file.read()
+    DATABASE = json.loads(data)
+    file.close()
+    return DATABASE
+    
 def actualizaDB():
     file = open("./DATABASE.json", "w")
     appendjson = json.dumps(DATABASE, indent=4)
@@ -69,10 +65,22 @@ def procesaJson(mensjson):
     finaljson = json.loads(jsondecoded)
     return finaljson
 
+def checkFilename(json_dict, DATABASE):
+    existe = False
+    nombreasubir = json_dict["usuario"]
+    archivoasubir = json_dict["filename"]
+    for nombres, archivos in DATABASE.items():
+        for link, filename in archivos.items():
+            if nombreasubir == nombres and archivoasubir == filename:
+                existe = True
+    return existe
+               
+
 def upload():
     #creamos un nuevo objeto en python
     nombre = json_dic["usuario"]
-    file_dir = json_dic["filename"]  
+    file_dir = json_dic["filename"] 
+    
     #creaamos un nuevo id (link)
     link = str(uuid.uuid4())
     
@@ -160,18 +168,23 @@ while True:
     #Recibimos un archivo binario
     mens = socket.recv_multipart()
     
-    #Manejo de base de datos 
-    file = open("./DATABASE.json", "r")
-    data=file.read()
-    DATABASE = json.loads(data)
-    file.close()
+    #cargamos la base de datos en DATABASE
+    DATABASE= leeDATABASE()
 
     json_dic = procesaJson(mens[0])
-    #caso en que el usuario haga upload
+    
+    #caso en que el cliente haga upload
     if json_dic["tipo"] == 'upload':
-        upload()
-        archivo = mens[1]
-        guardaArchivo(archivo, json_dic)
+        #revisamos si el archivo existe
+        existe = checkFilename(json_dic, DATABASE)
+        if existe:
+            socket.send_string('\nYa existe un archivo con este nombre')
+        else:
+            upload()
+            archivo = mens[1]
+            guardaArchivo(archivo, json_dic)
+    
+    #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'downloadlink':
         dllink = json_dic["filename"]
         download(DATABASE, dllink)
