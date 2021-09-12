@@ -48,9 +48,16 @@ def uneJsonyArchivo(byte_json, byte_archivo):
     unido = byte_json + byte_archivo
     return unido
 
+def procesaJson(mensjson):
+    jsondecoded = mensjson.decode('utf-8')
+    finaljson = json.loads(jsondecoded)
+    return finaljson
 
-
-
+def downloadFile(response, archivo):
+    filename = response["filename"]
+    file = open(filename, "wb")
+    file.write(archivo)
+    file.close()
 
 #!-------------------Logica del CLIENT -------------------------
 #recibimos los argumentos del usuario y los guardamos en variables
@@ -65,10 +72,20 @@ if tipo == 'upload':
     archivobinario = procesaArchivo(file_dir)
     #enviamos la peticion al server
     socket.send_multipart([jsonencoded, archivobinario])
+    #esperamos la respuesta y la imprimimos
+    response = socket.recv_string()
+    print(response)
+    
 if tipo == 'downloadlink':
     socket.send_multipart([jsonencoded])
+    mens = socket.recv_multipart()
+    response = procesaJson(mens[0])
+    
+    if response["encontrado"]:
+        print(response["response"])
+        downloadFile(response, mens[1])
+    else:
+        print(response["response"])
 
-#esperamos la respuesta y la imprimimos
-response = socket.recv_string()
-print(response)
+
 #!-------------------Logica del cliente -------------------------

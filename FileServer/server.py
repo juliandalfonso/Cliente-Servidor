@@ -103,21 +103,52 @@ def upload():
         #!crear carpeta de usuario
         #!agregar archivo a carpeta de  usuario
 
+def encuentraArchivo(usuario, nombrearchivo):
+    newfilepath = './files/'+usuario+'/'+nombrearchivo
+    #si existe la carpeta del usuario la sobre escribe, sino la crea 
+    file = open(newfilepath, "rb")
+    data = file.read()
+    file.close()
+    return data
+
 def download(DATABASE,dllink):
     
     encontrado = False
+    nombrearchivo =''
+    usuario = ''
     for nombres, items in DATABASE.items():
         for link, filename in items.items():
             if link == dllink:
-                print(filename)
+                nombrearchivo = filename
+                usuario = nombres
                 response = f'\nHa solicitado descargar {filename} de {nombres}'
                 encontrado = True
+                
     
+    #en caso de encontrar el archivo con el link
     if encontrado:
-        socket.send_string(response)
+        json_response = json.dumps(
+            {
+                'encontrado': True,
+                'response': response,
+                'filename': nombrearchivo
+            }
+        )
+        json_response_encoded = json_response.encode('utf-8')
+        #cargamos el archivo en file
+        file = encuentraArchivo(usuario, nombrearchivo)
+        socket.send_multipart([json_response_encoded,file])
+        
     else:
-        response = 'link no encontrado'
-        socket.send_string(response)
+        response = '\nlink no encontrado'
+        json_response = json.dumps(
+            {
+                'encontrado': False,
+                'response': response
+            }
+        )
+        json_response_encoded = json_response.encode('utf-8')
+        socket.send_multipart([json_response_encoded])
                 
                 
             
