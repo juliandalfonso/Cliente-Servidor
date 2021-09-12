@@ -15,10 +15,10 @@
 
 
 
-import zmq
-import json
-import uuid
-import os
+import zmq #sockets
+import json 
+import uuid #unique-id -> encuentra identificador unico
+import os #para crear las nuevas carpetas y checkear su existencia
 
 #-----------Conexion con CLIENT-------------
 context = zmq.Context()
@@ -28,6 +28,7 @@ socket.bind('tcp://*:5555')
 
 
 #?-----------------------------FUNCIONES-----------------------------------------
+#lee el contenido de DATABASE.json y retorna su contenido
 def leeDATABASE():
     file = open("./DATABASE.json", "r")
     data=file.read()
@@ -35,23 +36,27 @@ def leeDATABASE():
     file.close()
     return DATABASE
     
+#escribe el nuevo contenido en la BD DATABASE.json
 def actualizaDB():
     file = open("./DATABASE.json", "w")
     appendjson = json.dumps(DATABASE, indent=4)
     file.write(appendjson)
     file.close()
 
+#crea un nuevo diccionario con el link y el archivo
 def nuevoDict(json_dic, link):
     filename = json_dic["filename"]
     newjson = {link : filename}
     return newjson
 
+#crea nuevo diccionario con el nombre del usuario, el link y el archivo
 def nuevoUsuario(json_dic, link):
     nombre = json_dic["usuario"]
     filename = json_dic["filename"]
     newuser =   { nombre : {link : filename}}
     return newuser
 
+#crea una carpeta o la actualiza con el nuevo archivo subido
 def guardaArchivo(json_dic, archivo):
     #crea un directorio con el nombre del usuario y el archivo
     # /files/usuario/archivo.txt
@@ -62,11 +67,14 @@ def guardaArchivo(json_dic, archivo):
     file.write(archivo)
     file.close()
 
+#decodifica el json y lo convierte a diccionario
 def procesaJson(mensjson):
+    #decodifica multipart a utf-8
     jsondecoded = mensjson.decode('utf-8')
     finaljson = json.loads(jsondecoded)
     return finaljson
 
+#revisa la existencia de un archivo y devuelve booleano 
 def checkFilename(json_dict, DATABASE):
     existe = False
     nombreasubir = json_dict["usuario"]
@@ -76,15 +84,14 @@ def checkFilename(json_dict, DATABASE):
             if nombreasubir == nombres and archivoasubir == filename:
                 existe = True
     return existe
-               
+
+#actualizamos la DATABASE.json con el nuevo archivo
 def upload():
     #creamos un nuevo objeto en python
     nombre = json_dic["usuario"]
     file_dir = json_dic["filename"] 
-    
     #creaamos un nuevo id (link)
-    link = str(uuid.uuid4())
-    
+    link = str(uuid.uuid4())    
     #verificamos la existencioa del nuevo contacto
     if nombre in DATABASE:
         #creamos el diccionario a agregar al usuario existente en la BD
@@ -97,7 +104,6 @@ def upload():
         response = f'\nSe agregó el archivo:{file_dir} al usuario {nombre}\n'
         socket.send_string(response)
         print('[SERV] archivo agregado')
-        #! agregar archivo a carpeta de usuario
     
     #caso en que el usuario no esté en la BD
     else:
@@ -110,10 +116,8 @@ def upload():
         response = f'\nnuevo usuario {nombre} con archivo {file_dir}\n'
         socket.send_string(response)
         print('[SERV] usuario y carpeta creados y archivo agregado')
-        
-        #!crear carpeta de usuario
-        #!agregar archivo a carpeta de  usuario
 
+#encuentra el archivo solicitado dentro de las carpetas existentes y devuelve su contenido
 def encuentraArchivo(usuario, nombrearchivo):
     newfilepath = './files/'+usuario+'/'+nombrearchivo
     #si existe la carpeta del usuario la sobre escribe, sino la crea 
@@ -122,6 +126,7 @@ def encuentraArchivo(usuario, nombrearchivo):
     file.close()
     return data
 
+#busca un archivo segun el link y se lo envia al cliente en caso de encontrarlo
 def download(DATABASE,dllink):
     
     encontrado = False
@@ -162,7 +167,8 @@ def download(DATABASE,dllink):
         json_response_encoded = json_response.encode('utf-8')
         socket.send_multipart([json_response_encoded])
         print('[SERV] link no encontrado descarga no exitosa')
-                
+
+#verifica que el archivo exista y devuelve el link de descarga                
 def shareLink(json_dic, DATABASE):
     linkshare=''
     nombreacompartir = json_dic["usuario"]
