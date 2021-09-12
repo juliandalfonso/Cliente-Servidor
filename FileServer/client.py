@@ -59,12 +59,15 @@ user, tipo, file_dir = arguments()
 #creamos un json con la informacion que suministra el usuario
 newjson = convertToJson(user, tipo, file_dir)
 jsonencoded = newjson.encode('utf-8')
-#procesa la direccion del archivo lo lee y devuelve su informacion en binario
-archivobinario = procesaArchivo(file_dir)
 
-#enviamos la peticion al server
-socket.send_multipart([jsonencoded, archivobinario])
-# odkcet.send_multipart([newjson.encode('utf-8'), archivobinario])
+if tipo == 'upload':
+    #procesa la direccion del archivo lo lee y devuelve su informacion en binario
+    archivobinario = procesaArchivo(file_dir)
+    #enviamos la peticion al server
+    socket.send_multipart([jsonencoded, archivobinario])
+if tipo == 'downloadlink':
+    socket.send_multipart([jsonencoded])
+
 #esperamos la respuesta y la imprimimos
 response = socket.recv_string()
 print(response)

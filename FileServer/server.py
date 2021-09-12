@@ -45,16 +45,18 @@ def actualizaDB():
 
 def nuevoDict(json_dic, link):
     filename = json_dic["filename"]
-    newjson = {filename : link}
+    newjson = {link : filename}
     return newjson
 
 def nuevoUsuario(json_dic, link):
     nombre = json_dic["usuario"]
     filename = json_dic["filename"]
-    newuser =   { nombre : {filename : link}}
+    newuser =   { nombre : {link : filename}}
     return newuser
 
 def guardaArchivo(archivo, json_dict):
+    #crea un directorio con el nombre del usuario y el archivo
+    # /files/usuario/archivo.txt
     newfilepath = './files/'+json_dic["usuario"]+'/'+json_dic["filename"]
     #si existe la carpeta del usuario la sobre escribe, sino la crea 
     os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
@@ -101,6 +103,24 @@ def upload():
         #!crear carpeta de usuario
         #!agregar archivo a carpeta de  usuario
 
+def download(DATABASE,dllink):
+    
+    encontrado = False
+    for nombres, items in DATABASE.items():
+        for link, filename in items.items():
+            if link == dllink:
+                print(filename)
+                response = f'\nHa solicitado descargar {filename} de {nombres}'
+                encontrado = True
+    
+    if encontrado:
+        socket.send_string(response)
+    else:
+        response = 'link no encontrado'
+        socket.send_string(response)
+                
+                
+            
 
 
 
@@ -116,11 +136,14 @@ while True:
     file.close()
 
     json_dic = procesaJson(mens[0])
-    archivo = mens[1]
-    guardaArchivo(archivo, json_dic)
     #caso en que el usuario haga upload
     if json_dic["tipo"] == 'upload':
         upload()
+        archivo = mens[1]
+        guardaArchivo(archivo, json_dic)
+    if json_dic["tipo"] == 'downloadlink':
+        dllink = json_dic["filename"]
+        download(DATABASE, dllink)
     
-    print('guardado')
+    print('[SERV] Terminado')
 #!-------------------Logica del SERVER -------------------------
