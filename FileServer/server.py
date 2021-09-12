@@ -28,6 +28,7 @@
 import zmq
 import json
 import uuid
+import os
 
 #-----------Conexion con CLIENT-------------
 context = zmq.Context()
@@ -54,7 +55,9 @@ def nuevoUsuario(json_dic, link):
     return newuser
 
 def guardaArchivo(archivo, json_dict):
-    newfilepath = './files/'+json_dic["filename"]
+    newfilepath = './files/'+json_dic["usuario"]+'/'+json_dic["filename"]
+    #si existe la carpeta del usuario la sobre escribe, sino la crea 
+    os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
     file = open(newfilepath, "wb")
     file.write(archivo)
     file.close()
