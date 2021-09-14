@@ -178,6 +178,35 @@ def shareLink(json_dic, DATABASE):
             if nombreacompartir == nombres and archivoacompartir == filename:
                 linkshare = link
     return linkshare
+
+#lista los archivos de la base de datos y los envia al servidor
+def listadorArchivos(DATABASE):
+    lista = ''
+    for nombres, archivos in DATABASE.items():
+        lista += nombres+':\n'
+        for link, filename in archivos.items():
+            lista += '      -'+filename + '\n'
+    socket.send_string(lista)
+    print('[SERV] enviada lista de archivos')
+
+def listadorArchivosUsuario(json_dic,DATABASE):
+    usuario = json_dic["usuario"]
+    lista = f'archivos de {usuario}: \n'
+    encontrado = False
+    for nombres, archivos in DATABASE.items():
+        if usuario == nombres:
+            lista += nombres+':\n'
+            encontrado = True
+        for link, filename in archivos.items():
+            if usuario == nombres:
+                lista += '      -'+filename + '\n'
+    if encontrado:
+        print('[SERV] enviando archivos al cliente ')
+        socket.send_string(lista)
+    else:
+        print('[SERV] Usuario no encontrado')
+        socket.send_string('Usuario no encontrado')
+            
 #?-----------------------------FUNCIONES-----------------------------------------
 
 
@@ -213,6 +242,13 @@ while True:
         else:
             socket.send_string('archivo no encontrado')
             print('[SERV] archivo no encontrado')
+    
+    #caso que el cliente solicite la lista de los archivos
+    if json_dic["tipo"] == 'list':
+        if json_dic["filename"] == 'todo':
+            listadorArchivos(DATABASE)
+        else:
+            listadorArchivosUsuario(json_dic, DATABASE)
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'downloadlink':

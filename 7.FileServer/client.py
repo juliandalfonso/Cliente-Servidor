@@ -1,6 +1,5 @@
 
 #todo:-----------------------------------------
-    
     #python client.py username upload hola.txt #!LISTO
         #crear funcionalidad upload ----------LISTO
     #python client.py username sharelink hola.txt#!LISTO
@@ -77,14 +76,21 @@ if tipo == 'upload':
     response = socket.recv_string()
     print(response)
 
-if tipo == 'sharelink':
+elif tipo == 'sharelink':
+    #enviamos la peticion al server
+    socket.send_multipart([jsonencoded])
+    #esperamos la respuesta y la imprimimos
+    response = socket.recv_string()
+    print(response)
+
+elif tipo == 'list':
     #enviamos la peticion al server
     socket.send_multipart([jsonencoded])
     #esperamos la respuesta y la imprimimos
     response = socket.recv_string()
     print(response)
     
-if tipo == 'downloadlink':
+elif tipo == 'downloadlink':
     socket.send_multipart([jsonencoded])
     mens = socket.recv_multipart()
     response = procesaJson(mens[0])
@@ -95,5 +101,6 @@ if tipo == 'downloadlink':
     else:
         print(response["response"])
 
-
+else:
+    print('digite correctamente el comando')
 #!-------------------Logica del cliente -------------------------
