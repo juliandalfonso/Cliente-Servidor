@@ -7,7 +7,7 @@
     #python client.py username downloadlink link#!LISTO
     #python client.py username list hola.txt#!LISTO
     
-    #arreglar usuario al listar (pedir opcion todos o solo usuario antes de pedir el usuario)#!FALTA
+    #arreglar usuario al listar (pedir opcion todos o solo usuario antes de pedir el usuario)#!LISTO
 #todo:-----------------------------------------
 
 import zmq
@@ -85,31 +85,31 @@ def menuDatos():
         tipo='upload'
     #sharelink
     elif selector == '2':
-        print('Ingrese usuario: ')
+        print('Ingrese usuario que subió el archivo: ')
         user = str(input())
-        print('\nIngrese archivo a compartir: ')
+        print('\nIngrese nombre del archivo que desea compartir: ')
         file_dir = str(input())
         tipo = 'sharelink'
     
     #list
     elif selector == '3':    
-        print('Ingrese usuario: ')
-        user = str(input())
-        tipo = 'list'
-        print('\n1.Solo archivos de usuario\n2.Todos los archivos\n')
+        print('\n1.Solo archivos de un usuario\n2.Todos los archivos\n')
         print('Seleccione una opcion: ')
         select = str(input())
+        tipo = 'list'
         if select == '1':
             file_dir = 'aaa'
+            print('Ingrese usuario a buscar: ')
+            user = str(input())
         elif select =='2':
             file_dir = 'todo'
+            user='aaa'
         else:
-            print('seleccione una opcion valida')           
+            print('seleccione una opcion valida') 
     #download
     elif selector == '4':
-        print('Ingrese usuario: ')
-        user = str(input())
-        print('\nIngrese link: ')
+        user = ''
+        print('\nIngrese el link de descarga: ')
         file_dir = str(input())
         tipo = 'downloadlink'
     print('\n')
