@@ -5,7 +5,7 @@
     #python client.py username sharelink hola.txt#!LISTO
         #crear funcionalidad sharelink
     #python client.py username downloadlink link#!LISTO
-    #python client.py username list hola.txt#!FALTA
+    #python client.py username list hola.txt#!LISTO
 #todo:-----------------------------------------
 
 import zmq
