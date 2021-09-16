@@ -8,6 +8,8 @@
     #python client.py username list hola.txt#!LISTO
     
     #arreglar usuario al listar (pedir opcion todos o solo usuario antes de pedir el usuario)#!LISTO
+    
+    #?Por mejorar: no se puede subir un archivo con el mismo nombre 
 #todo:-----------------------------------------
 
 import zmq
