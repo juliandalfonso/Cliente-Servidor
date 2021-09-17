@@ -16,7 +16,7 @@ socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
 #-----------Conexion con SERVER-------------
 
-CHUNK_SIZE = 1
+CHUNK_SIZE = 1000
 
 #------------Funciones--------------
 def arguments():
@@ -108,6 +108,15 @@ def menuDatos():
     print('\n')
     return selector, user, tipo, file_dir
 
+def sizeArchivo(file):
+    # Dice el tamano del archivo
+    file.seek(0, os.SEEK_END)
+    print("Size of file is :", file.tell(), "bytes")
+    size = file.tell()
+    file.seek(0, os.SEEK_SET)
+    return size
+
+
 #!-------------------Logica del CLIENT -------------------------
 while True:
 
@@ -119,15 +128,25 @@ while True:
 
     #upload
     if selector == '1':
-        
+        #abrimos el archivo en lectura binaria
         file = open(file_dir, "rb")
+        #retorna el peso del archivo
+        file_size = sizeArchivo(file)
+        #calculamos el porcentaje segun el peso del archivo y el chunksize
+        porcentaje = (CHUNK_SIZE*100)/file_size
+        #lleva la cuenta del porcentaje
+        contador = 0
         chunk = file.read(CHUNK_SIZE)
         while chunk:
-            print(chunk)
+            #enviamos el primer chunk al server
             socket.send_multipart([jsonencoded, chunk])
-            porcentaje = socket.recv_string()
-            print(porcentaje)
+            #recibimos la respuesta del server
+            mensaje = socket.recv_string()
+            #leemos el siguiente chunk
             chunk = file.read(CHUNK_SIZE)
+            #imprimimos el porcentaje enviado hasta ahora
+            contador += porcentaje
+            print(str("{:.1f}".format(contador)) + '%')
         file.close()
 
     #sharelink
@@ -160,5 +179,5 @@ while True:
     else:
         print('digite correctamente el comando')
     
-    nada = str(input())
+    nada = str(input('\n\npresione enter para conitnuar'))
 #!-------------------Logica del cliente -------------------------

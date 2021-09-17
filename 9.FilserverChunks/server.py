@@ -213,15 +213,13 @@ while True:
 
     #primera parte del mensaje
     json_dic = procesaJson(mens[0])
-    #segunda parte del mensaje
-    chunk = mens[1]
     
     #caso en que el cliente haga upload
     if json_dic["tipo"] == 'upload':
+        #segunda parte del mensaje
+        chunk = mens[1]
         #revisamos si el archivo existe
         existe = checkFilename(json_dic, DATABASE)
-        print(chunk)
-        print('\n')
         if existe:
             cargaChunks(json_dic, chunk)
             socket.send_string('True')
@@ -251,5 +249,4 @@ while True:
         dllink = json_dic["filename"]
         download(DATABASE, dllink)
     
-    print('[SERV] Terminado')
 #!-------------------Logica del SERVER -------------------------
