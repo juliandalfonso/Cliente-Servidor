@@ -1,15 +1,10 @@
 
 #todo:--------------------------------------------------
-    #UPLOAD-----------#!LISTO
-        #por mejorar: archivo se repite en DB si ya existe#!LISTO
-    #DOWNLOADLINK-----#!LISTO
+    #UPLOAD
+    #recibe chunks y completa el archivo de a pocos #!FALTA
     
-    #SHARELINK--------#!LISTO
-        #funcion que encuentre el archivo y devuelva su link
-            #link = buscaArchivo(filename)
-            #responder string al cliente
-    #LIST-------------#!FALTA
-        #listar todos loas archivos?
+    #DOWNLOAD
+    #server envia un archivo como chunks tambien #!FALTA
 
 #todo:--------------------------------------------------
 
@@ -55,17 +50,6 @@ def nuevoUsuario(json_dic, link):
     filename = json_dic["filename"]
     newuser =   { nombre : {link : filename}}
     return newuser
-
-#crea una carpeta o la actualiza con el nuevo archivo subido
-def guardaArchivo(json_dic, archivo):
-    #crea un directorio con el nombre del usuario y el archivo
-    # /files/usuario/archivo.txt
-    newfilepath = './files/'+json_dic["usuario"]+'/'+json_dic["filename"]
-    #si existe la carpeta del usuario la sobre escribe, sino la crea 
-    os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
-    file = open(newfilepath, "wb")
-    file.write(archivo)
-    file.close()
 
 #decodifica el json y lo convierte a diccionario
 def procesaJson(mensjson):
@@ -207,6 +191,15 @@ def listadorArchivosUsuario(json_dic,DATABASE):
         print('[SERV] Usuario no encontrado')
         socket.send_string('Usuario no encontrado')
             
+def cargaChunks(json_dic, archivo):
+    #crea un directorio con el nombre del usuario y el archivo
+    # /files/usuario/archivo.txt
+    newfilepath = './files/'+json_dic["usuario"]+'/'+json_dic["filename"]
+    #si existe la carpeta del usuario la sobre escribe, sino la crea
+    os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
+    file = open(newfilepath, "ab")
+    file.write(archivo)
+    file.close()
 #?-----------------------------FUNCIONES-----------------------------------------
 
 
@@ -215,23 +208,26 @@ def listadorArchivosUsuario(json_dic,DATABASE):
 while True:
     #Recibimos un archivo binario
     mens = socket.recv_multipart()
-    
     #cargamos la base de datos en DATABASE
     DATABASE= leeDATABASE()
 
+    #primera parte del mensaje
     json_dic = procesaJson(mens[0])
+    #segunda parte del mensaje
+    chunk = mens[1]
     
     #caso en que el cliente haga upload
     if json_dic["tipo"] == 'upload':
         #revisamos si el archivo existe
         existe = checkFilename(json_dic, DATABASE)
+        print(chunk)
+        print('\n')
         if existe:
-            socket.send_string('\nYa existe un archivo con este nombre\n')
-            print('[SERV] cliente solicito agregar un archivo que ya existe')
+            cargaChunks(json_dic, chunk)
+            socket.send_string('True')
         else:
             upload()
-            archivo = mens[1]
-            guardaArchivo(json_dic, archivo)
+            cargaChunks(json_dic, chunk)
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'sharelink':

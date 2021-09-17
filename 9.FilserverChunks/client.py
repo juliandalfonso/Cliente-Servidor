@@ -1,15 +1,7 @@
 
 #todo:-----------------------------------------
-    #python client.py username upload hola.txt #!LISTO
-        #crear funcionalidad upload ----------LISTO
-    #python client.py username sharelink hola.txt#!LISTO
-        #crear funcionalidad sharelink
-    #python client.py username downloadlink link#!LISTO
-    #python client.py username list hola.txt#!LISTO
-    
-    #arreglar usuario al listar (pedir opcion todos o solo usuario antes de pedir el usuario)#!LISTO
-    
-    #?Por mejorar: no se puede subir un archivo con el mismo nombre 
+    #Nuevo metodo de envio por chunks #!FALTA
+    #recibir por chunks#!FALTA
 #todo:-----------------------------------------
 
 import zmq
@@ -24,7 +16,7 @@ socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
 #-----------Conexion con SERVER-------------
 
-
+CHUNK_SIZE = 1
 
 #------------Funciones--------------
 def arguments():
@@ -64,7 +56,6 @@ def downloadFile(response, archivo):
     file = open(filename, "wb")
     file.write(archivo)
     file.close()
-
 
 def menuDatos():
     
@@ -129,13 +120,15 @@ while True:
     #upload
     if selector == '1':
         
-        #procesa la direccion del archivo lo lee y devuelve su informacion en binario
-        archivobinario = procesaArchivo(file_dir)
-        #enviamos la peticion al server
-        socket.send_multipart([jsonencoded, archivobinario])
-        #esperamos la respuesta y la imprimimos
-        response = socket.recv_string()
-        print(response)
+        file = open(file_dir, "rb")
+        chunk = file.read(CHUNK_SIZE)
+        while chunk:
+            print(chunk)
+            socket.send_multipart([jsonencoded, chunk])
+            porcentaje = socket.recv_string()
+            print(porcentaje)
+            chunk = file.read(CHUNK_SIZE)
+        file.close()
 
     #sharelink
     elif selector == '2':
