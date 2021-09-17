@@ -2,6 +2,7 @@ import zmq
 import sys
 import json
 import time
+import os
 #Creamos un contexto de sockets
 context = zmq.Context()
 # creamos un socket como la variable s
@@ -32,6 +33,13 @@ json_dic = convertToJson(usuario, filename)
 jsonencoded = json_dic.encode('utf-8')
 
 file = open(filename, "rb")
+
+# Dice el tamano del archivo
+file.seek(0, os.SEEK_END)
+print("Size of file is :", file.tell(), "bytes")
+file.seek(0, os.SEEK_SET)
+
+
 chunk = file.read(CHUNK_SIZE)
 while chunk:
     print(chunk)
