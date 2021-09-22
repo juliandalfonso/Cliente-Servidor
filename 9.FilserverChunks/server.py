@@ -1,10 +1,13 @@
 
 #todo:--------------------------------------------------
-    #UPLOAD
-    #recibe chunks y completa el archivo de a pocos #!FALTA
+    #DOCUMENTACION Y ORDEN #!FALTA
+        #falta corregir print cuando server envia archivo
+        #falta documentar download y sus funciones
     
-    #DOWNLOAD
-    #server envia un archivo como chunks tambien #!FALTA
+    #UPLOAD #!LISTO
+    #SHARELINK #!LISTO
+    #DOWNLOAD #!LISTO
+    #LIST #!LISTO
 
 #todo:--------------------------------------------------
 

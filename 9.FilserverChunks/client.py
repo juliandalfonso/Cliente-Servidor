@@ -1,7 +1,13 @@
 
 #todo:-----------------------------------------
-    #Nuevo metodo de envio por chunks #!FALTA
-    #recibir por chunks#!FALTA
+    #DOCUMENTACION Y ORDEN #!FALTA
+        #falta corregir el porcentaje de descarga(desfazado a veces)
+        #falta documentar download y sus funciones
+    
+    #UPLOAD #!LISTO
+    #SHARELINK #!LISTO
+    #DOWNLOAD #!LISTO
+    #LIST #!LISTO
 #todo:-----------------------------------------
 
 import zmq
@@ -16,7 +22,7 @@ socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
 #-----------Conexion con SERVER-------------
 
-CHUNK_SIZE = 1
+CHUNK_SIZE = 1000
 
 #------------Funciones--------------
 def arguments():
