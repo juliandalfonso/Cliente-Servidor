@@ -16,7 +16,7 @@ socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
 #-----------Conexion con SERVER-------------
 
-CHUNK_SIZE = 1000
+CHUNK_SIZE = 1
 
 #------------Funciones--------------
 def arguments():
@@ -31,7 +31,8 @@ def convertToJson(user, tipo, file_dir):
         {
             "usuario" : user,
             "tipo" : tipo,
-            "filename": file_dir
+            "filename": file_dir,
+            "chunk":0
         }
     )
     return crearJson
@@ -51,10 +52,29 @@ def procesaJson(mensjson):
     finaljson = json.loads(jsondecoded)
     return finaljson
 
-def downloadFile(response, archivo):
-    filename = response["filename"]
-    file = open(filename, "wb")
-    file.write(archivo)
+def downloadFile(user,file_dir,response, archivo):
+    #crea un directorio con el nombre del usuario y el archivo
+    # /files/usuario/archivo.txt
+    newfilepath = './Clientfiles/'+user+'/'+file_dir
+    #si existe la carpeta del usuario la sobre escribe, sino la crea
+    os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
+    size=response["size"]
+    chunk = 0
+    
+    while chunk <= size:
+        file = open(newfilepath, "ab")
+        file.write(archivo)
+        chunk += CHUNK_SIZE
+        #imprimimos el porcentaje enviado hasta ahora
+        porcentaje = (chunk*100)/size
+        print(str("{:.1f}".format(porcentaje)) + '%')
+        chunkjson = json.dumps({'chunk': chunk })
+        chunkencoded = chunkjson.encode('utf-8')
+        #enviamos el primer chunk al server
+        socket.send_multipart([jsonencoded, chunkencoded])
+        #recibimos la respuesta del server
+        mens,archivo_respuesta = socket.recv_multipart()
+        archivo = archivo_respuesta
     file.close()
 
 def menuDatos():
@@ -166,18 +186,21 @@ while True:
         print(response)
     #download
     elif selector == '4':
-        socket.send_multipart([jsonencoded])
+        chunkjson = json.dumps({'chunk': 0})
+        chunkencoded = chunkjson.encode('utf-8')
+        socket.send_multipart([jsonencoded,chunkencoded])
         mens = socket.recv_multipart()
         response = procesaJson(mens[0])
         
         if response["encontrado"]:
             print(response["response"])
-            downloadFile(response, mens[1])
+            file_dir = response["filename"]
+            downloadFile(user,file_dir,response, mens[1])
         else:
             print(response["response"])
 
     else:
         print('digite correctamente el comando')
     
-    nada = str(input('\n\npresione enter para conitnuar'))
+    nada = str(input('\n\npresione enter para continuar'))
 #!-------------------Logica del cliente -------------------------

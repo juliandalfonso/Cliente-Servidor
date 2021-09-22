@@ -20,7 +20,7 @@ context = zmq.Context()
 socket = context.socket(zmq.REP)
 socket.bind('tcp://*:5555')
 #-----------Conexion con CLIENT-------------
-
+CHUNK_SIZE = 1000
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DATABASE.json y retorna su contenido
@@ -101,17 +101,41 @@ def upload():
         socket.send_string(response)
         print('[SERV] usuario y carpeta creados y archivo agregado')
 
+
+def sizeArchivo(usuario,nombrearchivo):
+    newfilepath = './Serverfiles/'+usuario+'/'+nombrearchivo
+    #si existe la carpeta del usuario la sobre escribe, sino la crea 
+    file = open(newfilepath, "rb")
+    # Dice el tamano del archivo
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0, os.SEEK_SET)
+    return size
+
+
 #encuentra el archivo solicitado dentro de las carpetas existentes y devuelve su contenido
 def encuentraArchivo(usuario, nombrearchivo):
-    newfilepath = './files/'+usuario+'/'+nombrearchivo
+    newfilepath = './Serverfiles/'+usuario+'/'+nombrearchivo
     #si existe la carpeta del usuario la sobre escribe, sino la crea 
     file = open(newfilepath, "rb")
     data = file.read()
     file.close()
     return data
 
+#encuentra el archivo solicitado dentro de las carpetas existentes y devuelve su contenido
+def segmentaArchivo(usuario, nombrearchivo, chunk):
+    newfilepath = './Serverfiles/'+usuario+'/'+nombrearchivo
+    #si existe la carpeta del usuario la sobre escribe, sino la crea 
+    file = open(newfilepath, "rb")
+    file.seek(chunk)
+    data= file.read(CHUNK_SIZE)
+    file.seek(0, os.SEEK_SET)
+    file.close()
+    return data
+
+
 #busca un archivo segun el link y se lo envia al cliente en caso de encontrarlo
-def download(DATABASE,dllink):
+def download(DATABASE,dllink,chunk):
     
     encontrado = False
     nombrearchivo =''
@@ -127,18 +151,20 @@ def download(DATABASE,dllink):
     
     #en caso de encontrar el archivo con el link
     if encontrado:
+        size = sizeArchivo(usuario, nombrearchivo)
+        
         json_response = json.dumps(
             {
                 'encontrado': True,
                 'response': response,
-                'filename': nombrearchivo
+                'filename': nombrearchivo,
+                'size': size
             }
         )
         json_response_encoded = json_response.encode('utf-8')
-        #cargamos el archivo en file
-        file = encuentraArchivo(usuario, nombrearchivo)
-        socket.send_multipart([json_response_encoded,file])
-        print('[SERV] archivo enviado al cliente para descargar')
+        
+        filesegment = segmentaArchivo(usuario,nombrearchivo, chunk)
+        socket.send_multipart([json_response_encoded,filesegment])
         
     else:
         response = '\nlink no encontrado'
@@ -194,7 +220,7 @@ def listadorArchivosUsuario(json_dic,DATABASE):
 def cargaChunks(json_dic, archivo):
     #crea un directorio con el nombre del usuario y el archivo
     # /files/usuario/archivo.txt
-    newfilepath = './files/'+json_dic["usuario"]+'/'+json_dic["filename"]
+    newfilepath = './Serverfiles/'+json_dic["usuario"]+'/'+json_dic["filename"]
     #si existe la carpeta del usuario la sobre escribe, sino la crea
     os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
     file = open(newfilepath, "ab")
@@ -247,6 +273,8 @@ while True:
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'downloadlink':
         dllink = json_dic["filename"]
-        download(DATABASE, dllink)
+        chunkjson = json.loads(mens[1])
+        chunk = chunkjson["chunk"]
+        download(DATABASE, dllink, chunk)
     
 #!-------------------Logica del SERVER -------------------------
