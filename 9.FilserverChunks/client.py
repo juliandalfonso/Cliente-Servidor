@@ -1,8 +1,7 @@
 
 #todo:-----------------------------------------
-    #DOCUMENTACION Y ORDEN #!FALTA
-        #falta corregir el porcentaje de descarga(desfazado a veces)
-        #falta documentar download y sus funciones
+    #corregir el porcentaje de descarga
+    #(desfazado a veces)#!FALTA--
     
     #UPLOAD #!LISTO
     #SHARELINK #!LISTO
@@ -10,92 +9,90 @@
     #LIST #!LISTO
 #todo:-----------------------------------------
 
-import zmq
-import json
-import sys
-import os
-import time
+import zmq # libreria sockets 
+import json #diccionario python a json 
+import os #sistema operativo para las rutas de los archivos
 
-#-----------Conexion con SERVER-------------
+#?-----------Conexion con SERVER-------------
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
-#-----------Conexion con SERVER-------------
+#?-----------Conexion con SERVER-------------
 
-CHUNK_SIZE = 1000
+CHUNK_SIZE = 1000 #establecemos una constante de particion de archivos en memoria
 
-#------------Funciones--------------
-def arguments():
-    usuario = sys.argv[1]
-    tipo = sys.argv[2]
-    dir_archivo = sys.argv[3]
-    
-    return usuario, tipo, dir_archivo
-
+#?-----------------------------FUNCIONES-----------------------------------------
+#recibe los argumentos del usuario y los convierte en json
 def convertToJson(user, tipo, file_dir):
-    crearJson = json.dumps(
+    crearJson = json.dumps(#json.dumps convierte dict a json
         {
             "usuario" : user,
-            "tipo" : tipo,
+            "tipo" : tipo, #tipo (upload, download, list, share)
             "filename": file_dir,
-            "chunk":0
+            "chunk":0 #posicion del chunk a descargar
         }
     )
     return crearJson
 
-def procesaArchivo(file_dir):
-    file = open(file_dir, "rb")
-    data=file.read()
-    file.close()
-    return data
-
-def uneJsonyArchivo(byte_json, byte_archivo):
-    unido = byte_json + byte_archivo
-    return unido
-
+#recibe el json utf-8 del server y lo procesa a diccionario
 def procesaJson(mensjson):
-    jsondecoded = mensjson.decode('utf-8')
-    finaljson = json.loads(jsondecoded)
+    jsondecoded = mensjson.decode('utf-8') #decodifica utf-8
+    finaljson = json.loads(jsondecoded)#carga el json a dict
     return finaljson
 
+#descarga un documento por chunks
 def downloadFile(user,file_dir,response, archivo):
     #crea un directorio con el nombre del usuario y el archivo
     # /files/usuario/archivo.txt
     newfilepath = './Clientfiles/'+user+'/'+file_dir
     #si existe la carpeta del usuario la sobre escribe, sino la crea
     os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
+    #tamaño del archivo respondido por el server
     size=response["size"]
-    chunk = 0
     
+    #posicion (puntero) del chunk que se le solicita al servidor
+    chunk = 0
+    #hasta que el puntero llegue al final del archivo
     while chunk <= size:
+        #abre el nuevo archivo en modo append y escribimos
         file = open(newfilepath, "ab")
         file.write(archivo)
+        
+        #actualizamos el puntero chunk
         chunk += CHUNK_SIZE
+        
         #imprimimos el porcentaje enviado hasta ahora
         porcentaje = (chunk*100)/size
         print(str("{:.1f}".format(porcentaje)) + '%')
+        
+        #Actualizamos el puntero y lo codificamos
         chunkjson = json.dumps({'chunk': chunk })
         chunkencoded = chunkjson.encode('utf-8')
-        #enviamos el primer chunk al server
+        
+        #enviamos el chunk al server
         socket.send_multipart([jsonencoded, chunkencoded])
         #recibimos la respuesta del server
         mens,archivo_respuesta = socket.recv_multipart()
+        #guardamos la nueva parte del archivo e iteramos nuevamente
         archivo = archivo_respuesta
     file.close()
 
+#logica del menú para mejor experiencia de usuario
 def menuDatos():
-    
+
     os.system('cls||clear')
     print('1.Upload\n2.Sharelink\n3.List\n4.Download\n')
     print('Seleccione una opcion: ')
     selector = str(input())
-
     
+    #variables que retorna la funcion
     user=''
     tipo=''
     file_dir=''
     
-    os.system('cls||clear')
+    os.system('cls||clear')#borra la pantalla 
+    
+    #upload
     if selector == '1':
         print('Ingrese usuario: ')
         user = str(input())
@@ -109,9 +106,8 @@ def menuDatos():
         print('\nIngrese nombre del archivo que desea compartir: ')
         file_dir = str(input())
         tipo = 'sharelink'
-    
     #list
-    elif selector == '3':    
+    elif selector == '3':
         print('\n1.Solo archivos de un usuario\n2.Todos los archivos\n')
         print('Seleccione una opcion: ')
         select = str(input())
@@ -132,8 +128,10 @@ def menuDatos():
         file_dir = str(input())
         tipo = 'downloadlink'
     print('\n')
+    
     return selector, user, tipo, file_dir
 
+#Recibe un archivo y retorna su tamaño
 def sizeArchivo(file):
     # Dice el tamano del archivo
     file.seek(0, os.SEEK_END)
@@ -141,6 +139,7 @@ def sizeArchivo(file):
     size = file.tell()
     file.seek(0, os.SEEK_SET)
     return size
+#?-----------------------------FUNCIONES-----------------------------------------
 
 
 #!-------------------Logica del CLIENT -------------------------
@@ -150,21 +149,23 @@ while True:
     
     #creamos un json con la informacion que suministra el usuario
     newjson = convertToJson(user, tipo, file_dir)
+    #lo codificamos para enviarlo al server
     jsonencoded = newjson.encode('utf-8')
 
     #upload
     if selector == '1':
         #abrimos el archivo en lectura binaria
         file = open(file_dir, "rb")
-        #retorna el peso del archivo
+        #calculamos el peso del archivo
         file_size = sizeArchivo(file)
         #calculamos el porcentaje segun el peso del archivo y el chunksize
         porcentaje = (CHUNK_SIZE*100)/file_size
-        #lleva la cuenta del porcentaje
-        contador = 0
+        contador = 0 #lleva la cuenta del porcentaje
+        
+        #leemos solo el numero de bytes especificados en CHUNK_SIZE
         chunk = file.read(CHUNK_SIZE)
         while chunk:
-            #enviamos el primer chunk al server
+            #enviamos la parte del archivo al server
             socket.send_multipart([jsonencoded, chunk])
             #recibimos la respuesta del server
             mensaje = socket.recv_string()
@@ -192,14 +193,18 @@ while True:
         print(response)
     #download
     elif selector == '4':
+        #inicializamos el apuntador en cero
         chunkjson = json.dumps({'chunk': 0})
+        #lo codificamos para enviarlo
         chunkencoded = chunkjson.encode('utf-8')
         socket.send_multipart([jsonencoded,chunkencoded])
+        
+        #recibimos la respuesta del server
         mens = socket.recv_multipart()
         response = procesaJson(mens[0])
         
+        #en caso de que el servidor haya encontrado el archivo
         if response["encontrado"]:
-            print(response["response"])
             file_dir = response["filename"]
             downloadFile(user,file_dir,response, mens[1])
         else:
@@ -208,5 +213,6 @@ while True:
     else:
         print('digite correctamente el comando')
     
-    nada = str(input('\n\npresione enter para continuar'))
+    #esperamos que el usuario digite enter para volver al menu
+    str(input('\n\npresione enter para continuar'))
 #!-------------------Logica del cliente -------------------------

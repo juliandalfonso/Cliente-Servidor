@@ -1,29 +1,23 @@
 
 #todo:--------------------------------------------------
-    #DOCUMENTACION Y ORDEN #!FALTA
-        #falta corregir print cuando server envia archivo
-        #falta documentar download y sus funciones
+    #Corregir print cuando server envia archivo#!FALTA
     
     #UPLOAD #!LISTO
     #SHARELINK #!LISTO
     #DOWNLOAD #!LISTO
     #LIST #!LISTO
-
 #todo:--------------------------------------------------
-
-
 
 import zmq # libreria sockets 
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
 import os #para crear las nuevas carpetas y checkear su existencia
 
-#-----------Conexion con CLIENT-------------
+#?-----------Conexion con CLIENT-------------
 context = zmq.Context()
 socket = context.socket(zmq.REP)
 socket.bind('tcp://*:5555')
-#-----------Conexion con CLIENT-------------
-
+#?-----------Conexion con CLIENT-------------
 
 CHUNK_SIZE = 1000 #establecemos una constante de particion de archivos en memoria
 
@@ -122,16 +116,6 @@ def sizeArchivo(usuario,nombrearchivo):
     file.seek(0, os.SEEK_SET)
     return size
 
-
-#encuentra el archivo solicitado dentro de las carpetas existentes y devuelve su contenido
-def encuentraArchivo(usuario, nombrearchivo):
-    newfilepath = './Serverfiles/'+usuario+'/'+nombrearchivo
-    #si existe la carpeta del usuario la sobre escribe, sino la crea 
-    file = open(newfilepath, "rb")
-    data = file.read()
-    file.close()
-    return data
-
 #encuentra el archivo solicitado dentro de las carpetas existentes y devuelve su contenido
 def segmentaArchivo(usuario, nombrearchivo, chunk):
     newfilepath = './Serverfiles/'+usuario+'/'+nombrearchivo
@@ -142,7 +126,6 @@ def segmentaArchivo(usuario, nombrearchivo, chunk):
     file.seek(0, os.SEEK_SET)
     file.close()
     return data
-
 
 #busca un archivo segun el link y se lo envia al cliente en caso de encontrarlo
 def download(DATABASE,dllink,chunk):
@@ -247,7 +230,6 @@ while True:
     mens = socket.recv_multipart()
     #cargamos la base de datos en DATABASE
     DATABASE= leeDATABASE()
-
     #primera parte del mensaje
     json_dic = procesaJson(mens[0])
     
