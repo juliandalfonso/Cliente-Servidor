@@ -182,7 +182,7 @@ def shareLink(json_dic, DATABASE):
                 linkshare = link
     return linkshare
 
-#lista los archivos de la base de datos y los envia al servidor
+#lista los archivos de la base de datos y los envia al cluente
 def listadorArchivos(DATABASE):
     lista = ''
     for nombres, archivos in DATABASE.items():
@@ -192,6 +192,7 @@ def listadorArchivos(DATABASE):
     socket.send_string(lista)
     print('[SERV] enviada lista de archivos')
 
+#lista los archivos de un usuario en especifico y los envia al cliente
 def listadorArchivosUsuario(json_dic,DATABASE):
     usuario = json_dic["usuario"]
     lista = f'archivos de {usuario}: \n'
