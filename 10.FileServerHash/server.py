@@ -1,26 +1,25 @@
 
 #todo:--------------------------------------------------
-    #!Implementacion de hash
-    #?como funciona la libreria hashlib?
-        #como implementarla
-    #?como funciona sha256?
-    #?El server debería guardar muchos archivos h1,h2,h3 etc?
-    #?porque hacer otro databasejson mas?
+    #Corregir print cuando server envia archivo#!FALTA
+    
+    #UPLOAD #!LISTO
+    #SHARELINK #!LISTO
+    #DOWNLOAD #!LISTO
+    #LIST #!LISTO
 #todo:--------------------------------------------------
 
-
-
-import zmq #sockets
-import json 
+import zmq # libreria sockets 
+import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
 import os #para crear las nuevas carpetas y checkear su existencia
 
-#-----------Conexion con CLIENT-------------
+#?-----------Conexion con CLIENT-------------
 context = zmq.Context()
 socket = context.socket(zmq.REP)
 socket.bind('tcp://*:5555')
-#-----------Conexion con CLIENT-------------
-CHUNK_SIZE = 1000
+#?-----------Conexion con CLIENT-------------
+
+CHUNK_SIZE = 1000 #establecemos una constante de particion de archivos en memoria
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DATABASE.json y retorna su contenido
@@ -41,8 +40,8 @@ def actualizaDB():
 #crea un nuevo diccionario con el link y el archivo
 def nuevoDict(json_dic, link):
     filename = json_dic["filename"]
-    newjson = {link : filename}
-    return newjson
+    newdic = {link : filename}
+    return newdic
 
 #crea nuevo diccionario con el nombre del usuario, el link y el archivo
 def nuevoUsuario(json_dic, link):
@@ -70,20 +69,25 @@ def checkFilename(json_dict, DATABASE):
     return existe
 
 #actualizamos la DATABASE.json con el nuevo archivo
-def upload():
-    #creamos un nuevo objeto en python
+def upload(json_dic):
+    #cargamos el usuario y el archivo 
     nombre = json_dic["usuario"]
     file_dir = json_dic["filename"] 
-    #creaamos un nuevo id (link)
-    link = str(uuid.uuid4())    
-    #verificamos la existencioa del nuevo contacto
+    
+    #creaamos un nuevo id (link de descarga) - tipo string
+    link = str(uuid.uuid4())
+        
+    #verificamos la existencia del usuario
     if nombre in DATABASE:
+        #en caso de que el usuario ya exista solo se carga el archivo
         #creamos el diccionario a agregar al usuario existente en la BD
         newjson = nuevoDict(json_dic, link)
-        #agregamos el nuevo diccionario al usuario
+        
+        #agregamos el nuevo diccionario al usuario con update
         DATABASE[nombre].update(newjson)
-        #abrimos el archivo de base de datos y lo agregamos
+        #abrimos el archivo de DATABASE.json y lo actualizamos con DATABASE
         actualizaDB()
+        
         #enviamos la respuesta al cliente
         response = f'\nSe agregó el archivo:{file_dir} al usuario {nombre}\n'
         socket.send_string(response)
@@ -101,7 +105,7 @@ def upload():
         socket.send_string(response)
         print('[SERV] usuario y carpeta creados y archivo agregado')
 
-
+# funcion que devuelve el tamaño de un archivo
 def sizeArchivo(usuario,nombrearchivo):
     newfilepath = './Serverfiles/'+usuario+'/'+nombrearchivo
     #si existe la carpeta del usuario la sobre escribe, sino la crea 
@@ -111,16 +115,6 @@ def sizeArchivo(usuario,nombrearchivo):
     size = file.tell()
     file.seek(0, os.SEEK_SET)
     return size
-
-
-#encuentra el archivo solicitado dentro de las carpetas existentes y devuelve su contenido
-def encuentraArchivo(usuario, nombrearchivo):
-    newfilepath = './Serverfiles/'+usuario+'/'+nombrearchivo
-    #si existe la carpeta del usuario la sobre escribe, sino la crea 
-    file = open(newfilepath, "rb")
-    data = file.read()
-    file.close()
-    return data
 
 #encuentra el archivo solicitado dentro de las carpetas existentes y devuelve su contenido
 def segmentaArchivo(usuario, nombrearchivo, chunk):
@@ -132,7 +126,6 @@ def segmentaArchivo(usuario, nombrearchivo, chunk):
     file.seek(0, os.SEEK_SET)
     file.close()
     return data
-
 
 #busca un archivo segun el link y se lo envia al cliente en caso de encontrarlo
 def download(DATABASE,dllink,chunk):
@@ -189,7 +182,7 @@ def shareLink(json_dic, DATABASE):
                 linkshare = link
     return linkshare
 
-#lista los archivos de la base de datos y los envia al servidor
+#lista los archivos de la base de datos y los envia al cluente
 def listadorArchivos(DATABASE):
     lista = ''
     for nombres, archivos in DATABASE.items():
@@ -199,6 +192,7 @@ def listadorArchivos(DATABASE):
     socket.send_string(lista)
     print('[SERV] enviada lista de archivos')
 
+#lista los archivos de un usuario en especifico y los envia al cliente
 def listadorArchivosUsuario(json_dic,DATABASE):
     usuario = json_dic["usuario"]
     lista = f'archivos de {usuario}: \n'
@@ -216,7 +210,8 @@ def listadorArchivosUsuario(json_dic,DATABASE):
     else:
         print('[SERV] Usuario no encontrado')
         socket.send_string('Usuario no encontrado')
-            
+
+#recibe chunks (el archivo por partes) y los va guardando a medida que los recibe            
 def cargaChunks(json_dic, archivo):
     #crea un directorio con el nombre del usuario y el archivo
     # /files/usuario/archivo.txt
@@ -236,7 +231,6 @@ while True:
     mens = socket.recv_multipart()
     #cargamos la base de datos en DATABASE
     DATABASE= leeDATABASE()
-
     #primera parte del mensaje
     json_dic = procesaJson(mens[0])
     
@@ -250,7 +244,7 @@ while True:
             cargaChunks(json_dic, chunk)
             socket.send_string('True')
         else:
-            upload()
+            upload(json_dic)
             cargaChunks(json_dic, chunk)
     
     #caso que el cliente solicite una descarga
