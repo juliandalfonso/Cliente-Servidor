@@ -6,9 +6,9 @@
 
 ## DESCRIPCIÓN
 
-    En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python.
+En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python.
 
-## CONTENIDO
+## CONTENIDO DE LA ASIGNATURA
 
 1. Definición y alcance arquitectura cliente servidor.
 Ventajas y desventajas.
@@ -29,3 +29,7 @@ Ventajas y desventajas.
 
 - [ZMQ Getting started python](https://zeromq.org/languages/python/)
 - [ZMQ Docs](https://pyzmq.readthedocs.io/en/latest/api/zmq.html)
+
+---
+### Nota:
+Cada carpeta es un entregable o una versión mejorada con modificaciones a medida que se avanza en la clase
