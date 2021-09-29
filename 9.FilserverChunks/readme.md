@@ -2,6 +2,10 @@
 
 Programa tipo "google Drive" que corre un servidor que escucha uno o varios clientes y almacena archivos.
 
+## Chunks: partes de archivo
+
+El servidor recibe el archivo por partes para optimizar la memoria, al igual que la descarga del archivo también se hace por partes
+
 ## Como Funciona
   
 - upload: sube un archivo al servidor
