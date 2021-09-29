@@ -1,12 +1,12 @@
 import hashlib
 
 inputFile = str(input('\n\nNombre del archivo: '))
-openedFile = open(inputFile)
+openedFile = open(inputFile, "rb")
 readFile = openedFile.read()
-FileEncoded = readFile.encode('utf-8')
 
 
-sha1Hash = hashlib.sha1(FileEncoded)
+
+sha1Hash = hashlib.sha1(readFile)
 sha1Hashed = sha1Hash.hexdigest()
 
 
