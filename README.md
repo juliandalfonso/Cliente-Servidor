@@ -1,26 +1,31 @@
-# Cliente-Servidor
+# Arquitectura Cliente-Servidor
 
-**Autor: Julian David Alfonso Moreno**
+### Autor: Julian David Alfonso Moreno
+
+---
 
 ## DESCRIPCIÓN
 
-En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python.
+    En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python.
 
 ## CONTENIDO
 
-- Definición y alcance arquitectura cliente servidor.
+1. Definición y alcance arquitectura cliente servidor.
 Ventajas y desventajas.
 
-- Modelo de capas
+2. Modelo de capas
+3. Sistemas operativos en Servidores
+4. Sockets y tipos de socket, comunicaciones TCP/IP
+5. Concepto de middleware
+6. Comunicación síncrona y asíncrona
+7. Primitivas de comunicación
+8. Generalidades sobre seguridad
+9. Servidores iterativos y concurrentes (Procesos, threads y eventos)
+10. RPC
+11. Agentes
+---  
 
-- Sistemas operativos en Servidores
+## Links de interés
 
-- Sockets y tipos de socket
-
-- Concepto de middleware
-
-- Comunicación síncrona y asíncrona
-
-- Primitivas de comunicación
-
-- Generalidades sobre de seguridad
+- [ZMQ Getting started python](https://zeromq.org/languages/python/)
+- [ZMQ Docs](https://pyzmq.readthedocs.io/en/latest/api/zmq.html)
