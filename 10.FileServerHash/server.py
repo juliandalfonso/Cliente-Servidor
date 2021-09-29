@@ -19,7 +19,8 @@ socket = context.socket(zmq.REP)
 socket.bind('tcp://*:5555')
 #?-----------Conexion con CLIENT-------------
 
-CHUNK_SIZE = 1000 #establecemos una constante de particion de archivos en memoria
+#Bittorrent block = 250KB -> 250000B
+CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DATABASE.json y retorna su contenido

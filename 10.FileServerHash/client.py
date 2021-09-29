@@ -19,7 +19,8 @@ socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
 #?-----------Conexion con SERVER-------------
 
-CHUNK_SIZE = 1000 #establecemos una constante de particion de archivos en memoria
+#Bittorrent block = 250KB -> 250000B
+CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #recibe los argumentos del usuario y los convierte en json
