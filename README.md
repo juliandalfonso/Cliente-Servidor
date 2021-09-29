@@ -1,20 +1,17 @@
 # Cliente-Servidor
 
+**Autor: Julian David Alfonso Moreno**
+
 ## DESCRIPCIÓN
 
-En este repositorio se ven los ejercicios prácticos desarrollados en clase y sus respectivos entregables
+En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python.
 
 ## CONTENIDO
 
 - Definición y alcance arquitectura cliente servidor.
 Ventajas y desventajas.
 
-- Tipos de cliente servidor: cliente pesado/ liviano vs.
-Servidor liviano/pesado.
-
 - Modelo de capas
-
-- Modelo vista controlador
 
 - Sistemas operativos en Servidores
 
