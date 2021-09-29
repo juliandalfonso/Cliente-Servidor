@@ -1,14 +1,14 @@
-# Arquitectura Cliente-Servidor
+# Arquitectura Cliente-Servidor :computer:
 
-### Autor: Julian David Alfonso Moreno
+### Autor: Julian David Alfonso Moreno :sunglasses:
 
 ---
 
-## DESCRIPCIÓN
+## DESCRIPCIÓN :books:
 
 En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python.
 
-## CONTENIDO DE LA ASIGNATURA
+## CONTENIDO DE LA ASIGNATURA :bookmark_tabs:
 
 1. Definición y alcance arquitectura cliente servidor.
 Ventajas y desventajas.
@@ -25,7 +25,7 @@ Ventajas y desventajas.
 11. Agentes
 ---  
 
-## Links de interés
+## Links de interés :paperclip:
 
 - [ZMQ Getting started python](https://zeromq.org/languages/python/)
 - [ZMQ Docs](https://pyzmq.readthedocs.io/en/latest/api/zmq.html)
