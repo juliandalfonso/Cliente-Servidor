@@ -19,14 +19,14 @@ Este programa se ejecuta corriendo dos archivos server.py  y client.py
 
 Para correr el servidor ejecutamos
 
-```bash
+```console
 python server.py
 ```
 
 Para correr el cliente ejecutamos
 
-```bash
-python server.py
+```console
+python client.py
 ```
 
 ## Screenshots
