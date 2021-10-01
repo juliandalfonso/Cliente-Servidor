@@ -1,17 +1,14 @@
 
 #todo:-----------------------------------------
-    #corregir el porcentaje de descarga
-    #(desfazado a veces)#!FALTA--
-    
-    #UPLOAD #!LISTO
-    #SHARELINK #!LISTO
-    #DOWNLOAD #!LISTO
-    #LIST #!LISTO
+    #Implmentar funcion que saca hash a un archivo
+    #agregar hash al json que se envia
+    #implementar descarga por hashes
 #todo:-----------------------------------------
 
 import zmq # libreria sockets 
 import json #diccionario python a json 
 import os #sistema operativo para las rutas de los archivos
+import hashlib #maneja encriptacion de archivos sha1-sha256
 
 #?-----------Conexion con SERVER-------------
 context = zmq.Context()
@@ -21,6 +18,9 @@ socket.connect('tcp://localhost:5555')
 
 #Bittorrent block = 250KB -> 250000B
 CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
+
+#objeto que permite encriptar un archivo a 160bits - 20 bytes
+sha1 = hashlib.sha1()
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #recibe los argumentos del usuario y los convierte en json
@@ -140,6 +140,15 @@ def sizeArchivo(file):
     size = file.tell()
     file.seek(0, os.SEEK_SET)
     return size
+
+def convertToJsonHash(chunkHash,chunkCounter):
+    crearJson = json.dumps(#json.dumps convierte dict a json
+        {
+            "hash" : chunkHash,
+            "chunkCounter" : chunkCounter, #tipo (upload, download, list, share)
+        }
+    )
+    return crearJson
 #?-----------------------------FUNCIONES-----------------------------------------
 
 
@@ -165,13 +174,22 @@ while True:
         
         #leemos solo el numero de bytes especificados en CHUNK_SIZE
         chunk = file.read(CHUNK_SIZE)
+        chunkCounter = 0 #cuenta cuantas partes se envian al servidor
         while chunk:
+            
+            #manejo de hashes
+            sha1.update(chunk)
+            chunkHash= sha1.hexdigest()#retorna hash tipo string
+            jsonHash = convertToJsonHash(chunkHash,chunkCounter).encode('utf-8')
+            
             #enviamos la parte del archivo al server
-            socket.send_multipart([jsonencoded, chunk])
+            socket.send_multipart([jsonencoded, chunk, jsonHash])
             #recibimos la respuesta del server
             mensaje = socket.recv_string()
             #leemos el siguiente chunk
             chunk = file.read(CHUNK_SIZE)
+            #incrementamos contador de chunks
+            chunkCounter +=1
             #imprimimos el porcentaje enviado hasta ahora
             contador += porcentaje
             print(str("{:.1f}".format(contador)) + '%')

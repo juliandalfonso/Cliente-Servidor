@@ -1,11 +1,9 @@
 
 #todo:--------------------------------------------------
-    #Corregir print cuando server envia archivo#!FALTA
-    
-    #UPLOAD #!LISTO
-    #SHARELINK #!LISTO
-    #DOWNLOAD #!LISTO
-    #LIST #!LISTO
+    #recibir hashes por partes
+    #guardar varios archivos sin formato por hashes
+    #crear hash_DB.json
+        #apuntadores de hashes al archivo completo
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
@@ -239,6 +237,8 @@ while True:
     if json_dic["tipo"] == 'upload':
         #segunda parte del mensaje
         chunk = mens[1]
+        jsonHash = procesaJson(mens[2])
+        print(f"part{jsonHash['chunkCounter']} -> {jsonHash['hash']}")
         #revisamos si el archivo existe
         existe = checkFilename(json_dic, DATABASE)
         if existe:
