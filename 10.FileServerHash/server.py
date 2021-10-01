@@ -52,8 +52,9 @@ def actualizaDB():
     file.close()
 
 #crea un nuevo diccionario con el link y el archivo
-def nuevoDict(jsonHash):
+def nuevoHash(jsonHash):
     newdic = {jsonHash['chunkCounter']:jsonHash['hash']}
+    print(newdic)
     return newdic
 
 #crea nuevo diccionario con el nombre del usuario, el link y el archivo
@@ -63,6 +64,13 @@ def nuevoUsuario(json_dic, link, jsonHash):
     newuser =   { nombre : {link : filename,
               filename : {jsonHash['chunkCounter']:jsonHash['hash']}}}
     return newuser
+
+#crea nuevo diccionario con el nombre del usuario, el link y el archivo
+def nuevoDict(json_dic, link):
+    filename = json_dic["filename"]
+    newdic =  {link : filename,
+              filename : {}}
+    return newdic
 
 #decodifica el json y lo convierte a diccionario
 def procesaJson(mensjson):
@@ -93,13 +101,11 @@ def upload(json_dic,jsonHash):
         
     #verificamos la existencia del usuario
     if nombre in DATABASE:
-        #en caso de que el usuario ya exista solo se carga el archivo
-        #creamos el diccionario a agregar al usuario existente en la BD
-        newjson = nuevoDict(jsonHash)
         
-        #agregamos el nuevo diccionario al usuario con update
+        newdic=nuevoDict(json_dic, link)
+        DATABASE[nombre].update(newdic)            
+        newjson = nuevoHash(jsonHash)
         DATABASE[nombre][file_dir].update(newjson)
-        #abrimos el archivo de DATABASE.json y lo actualizamos con DATABASE
         actualizaDB()
         #!actualizaKey_DB()
         
@@ -257,13 +263,13 @@ while True:
         jsonHash = procesaJson(mens[2])
         print(f"part{jsonHash['chunkCounter']} -> {jsonHash['hash']}")
         #revisamos si el archivo existe
-        # existe = checkFilename(json_dic, DATABASE)
-        # if existe:
-        #     cargaChunks(chunk,jsonHash)
-        #     socket.send_string('True')
-        # else:
-        upload(json_dic,jsonHash)
-        cargaChunks(chunk,jsonHash)
+        existe = checkFilename(json_dic, DATABASE)
+        if existe:
+            upload(json_dic,jsonHash)
+            cargaChunks(chunk,jsonHash)
+        else:
+            upload(json_dic,jsonHash)
+            cargaChunks(chunk,jsonHash)
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'sharelink':
