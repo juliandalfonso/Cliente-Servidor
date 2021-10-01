@@ -1,9 +1,24 @@
 
 #todo:--------------------------------------------------
-    #recibir hashes por partes
+    #recibir hashes por partes #!LISTO
     #guardar varios archivos sin formato por hashes
     #crear hash_DB.json
         #apuntadores de hashes al archivo completo
+        
+'''{
+    "julian": {
+        "51b2521c-1d22-4a4c-8d72-05dbc81a2b46": "hola2.txt",
+        "hola2.txt": {
+            0 : hash0,
+            1 : hash1,
+            2 : hash2        
+        }
+    },
+    "juan": {
+        "ad9be9a5-bb25-4b87-99b5-3596a36ae409": "ACUERDO_DE_PAGO.pdf"
+    }
+}
+'''
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
@@ -37,16 +52,16 @@ def actualizaDB():
     file.close()
 
 #crea un nuevo diccionario con el link y el archivo
-def nuevoDict(json_dic, link):
-    filename = json_dic["filename"]
-    newdic = {link : filename}
+def nuevoDict(jsonHash):
+    newdic = {jsonHash['chunkCounter']:jsonHash['hash']}
     return newdic
 
 #crea nuevo diccionario con el nombre del usuario, el link y el archivo
-def nuevoUsuario(json_dic, link):
+def nuevoUsuario(json_dic, link, jsonHash):
     nombre = json_dic["usuario"]
     filename = json_dic["filename"]
-    newuser =   { nombre : {link : filename}}
+    newuser =   { nombre : {link : filename,
+              filename : {jsonHash['chunkCounter']:jsonHash['hash']}}}
     return newuser
 
 #decodifica el json y lo convierte a diccionario
@@ -68,7 +83,7 @@ def checkFilename(json_dict, DATABASE):
     return existe
 
 #actualizamos la DATABASE.json con el nuevo archivo
-def upload(json_dic):
+def upload(json_dic,jsonHash):
     #cargamos el usuario y el archivo 
     nombre = json_dic["usuario"]
     file_dir = json_dic["filename"] 
@@ -80,12 +95,13 @@ def upload(json_dic):
     if nombre in DATABASE:
         #en caso de que el usuario ya exista solo se carga el archivo
         #creamos el diccionario a agregar al usuario existente en la BD
-        newjson = nuevoDict(json_dic, link)
+        newjson = nuevoDict(jsonHash)
         
         #agregamos el nuevo diccionario al usuario con update
-        DATABASE[nombre].update(newjson)
+        DATABASE[nombre][file_dir].update(newjson)
         #abrimos el archivo de DATABASE.json y lo actualizamos con DATABASE
         actualizaDB()
+        #!actualizaKey_DB()
         
         #enviamos la respuesta al cliente
         response = f'\nSe agregó el archivo:{file_dir} al usuario {nombre}\n'
@@ -95,10 +111,11 @@ def upload(json_dic):
     #caso en que el usuario no esté en la BD
     else:
         #creamos el diccionario del nuevo usuario
-        newuser = nuevoUsuario(json_dic, link)
+        newuser = nuevoUsuario(json_dic, link,jsonHash)
         #actualizamos el nuevo usuario en la BD
         DATABASE.update(newuser)
         actualizaDB()
+        #!actualizaKey_DB()
         #respondemos al cliente
         response = f'\nnuevo usuario {nombre} con archivo {file_dir}\n'
         socket.send_string(response)
@@ -211,10 +228,10 @@ def listadorArchivosUsuario(json_dic,DATABASE):
         socket.send_string('Usuario no encontrado')
 
 #recibe chunks (el archivo por partes) y los va guardando a medida que los recibe            
-def cargaChunks(json_dic, archivo):
+def cargaChunks(archivo, jsonHash):
     #crea un directorio con el nombre del usuario y el archivo
     # /files/usuario/archivo.txt
-    newfilepath = './Serverfiles/'+json_dic["usuario"]+'/'+json_dic["filename"]
+    newfilepath = './Serverfiles/'+ jsonHash['hash']
     #si existe la carpeta del usuario la sobre escribe, sino la crea
     os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
     file = open(newfilepath, "ab")
@@ -240,13 +257,13 @@ while True:
         jsonHash = procesaJson(mens[2])
         print(f"part{jsonHash['chunkCounter']} -> {jsonHash['hash']}")
         #revisamos si el archivo existe
-        existe = checkFilename(json_dic, DATABASE)
-        if existe:
-            cargaChunks(json_dic, chunk)
-            socket.send_string('True')
-        else:
-            upload(json_dic)
-            cargaChunks(json_dic, chunk)
+        # existe = checkFilename(json_dic, DATABASE)
+        # if existe:
+        #     cargaChunks(chunk,jsonHash)
+        #     socket.send_string('True')
+        # else:
+        upload(json_dic,jsonHash)
+        cargaChunks(chunk,jsonHash)
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'sharelink':

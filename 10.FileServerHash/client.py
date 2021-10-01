@@ -1,7 +1,7 @@
 
 #todo:-----------------------------------------
-    #Implmentar funcion que saca hash a un archivo
-    #agregar hash al json que se envia
+    #Implmentar funcion que saca hash a un archivo #!LISTO
+    #agregar hash al json que se envia #!LISTO
     #implementar descarga por hashes
 #todo:-----------------------------------------
 
