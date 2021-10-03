@@ -276,12 +276,10 @@ while True:
         #segunda parte del mensaje
         chunk = mens[1]
         jsonHash = procesaJson(mens[2])
-        print(f"part{jsonHash['chunkCounter']} -> {jsonHash['hash']}")
+        # print(f"part{jsonHash['chunkCounter']} -> {jsonHash['hash']}")
         #revisamos si el archivo existe
         existe = checkFilename(json_dic, DATABASE)
-        print(jsonHash['chunkCounter'])
         if existe and jsonHash['chunkCounter']==0:
-            print('Entreeeeeeeeeeeeeee')
             socket.send_string('archivoexiste')
         else:
             upload(json_dic,jsonHash)

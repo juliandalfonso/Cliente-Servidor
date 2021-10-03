@@ -196,7 +196,6 @@ while True:
             
             #recibimos la respuesta del server
             mensaje = socket.recv_string()
-            print(mensaje)
             if mensaje=='archivoexiste':
                 print('el archivo ya existe')
                 chunk=False
