@@ -3,6 +3,7 @@
     #Implmentar funcion que saca hash a un archivo #!LISTO
     #agregar hash al json que se envia #!LISTO
     #implementar descarga por hashes
+    #implementar opcion de salir
 #todo:-----------------------------------------
 
 import zmq # libreria sockets 

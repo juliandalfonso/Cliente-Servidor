@@ -264,10 +264,10 @@ def shareLink(json_dic, DATABASE):
 
 #lista los archivos de la base de datos y los envia al cluente
 def listadorArchivos(DATABASE):
-    lista = ''
+    lista ='Todos los archivos: \n'
     for nombres, archivos in DATABASE.items():
         lista += nombres+':\n'
-        for link, filename in archivos.items():
+        for filename, values in archivos.items():
             lista += '      -'+filename + '\n'
     socket.send_string(lista)
     print('[SERV] enviada lista de archivos')
@@ -281,7 +281,7 @@ def listadorArchivosUsuario(json_dic,DATABASE):
         if usuario == nombres:
             lista += nombres+':\n'
             encontrado = True
-        for link, filename in archivos.items():
+        for filename, values in archivos.items():
             if usuario == nombres:
                 lista += '      -'+filename + '\n'
     if encontrado:
