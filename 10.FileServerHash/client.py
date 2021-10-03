@@ -188,7 +188,13 @@ while True:
             #manejo de hashes
             sha1.update(chunk)
             chunkHash= sha1.hexdigest()#retorna hash tipo string
-            jsonHash = convertToJsonHash(chunkHash,chunkCounter,file_hash).encode('utf-8')
+            
+            #si el archivo se separa en mas de una parte
+            if file_size>CHUNK_SIZE:
+                jsonHash = convertToJsonHash(chunkHash,chunkCounter,file_hash).encode('utf-8')
+            elif file_size<=CHUNK_SIZE:
+                jsonHash = convertToJsonHash(file_hash,chunkCounter,file_hash).encode('utf-8')
+
             
             #enviamos la parte del archivo al server
             socket.send_multipart([jsonencoded, chunk, jsonHash])

@@ -4,23 +4,9 @@
     #guardar varios archivos sin formato por hashes #!LISTO
     #crear hash_DB.json#!LISTO
         #apuntadores de hashes al archivo completo
-        
-    #!POR CORREGIR
-        #file_hash se sobreescribe por cada archivo que se intenta subir 
-        #psoible solucion:
-'''{
-    "camilo": {
-        "f5961d9d-4d91-4c49-8cc2-43b83ca7ab4b": "code.png",
-        "file_hash": {
-            "code.png": "3caed3c115660bcaea8df25e818a4a993e27a567"
-            "ACUERDO_DE_PAGO.pdf": "c850f0e25702694f7d50eebed266bfb0093a5e4c"
-            },
-        "code.png": {
-            "0": "3caed3c115660bcaea8df25e818a4a993e27a567"
-        }
-    }
-}
-'''
+    #cuando un usuario suba un archivo que ya existe -> actualizar su perfil en DB.json
+    #modificar punteros y links al subir un archivo que ya existe
+    #es decir cuando ya existe el hash
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
@@ -121,6 +107,7 @@ def checkLink(json_dict, DATABASE):
 def checkHash(jsonHash, HASH_DATABASE):
     existe = False
     file_hash = jsonHash['file_hash']
+    print(file_hash)
     for hashes, archivos in HASH_DATABASE.items():
         if file_hash == hashes:
             existe = True
@@ -149,9 +136,10 @@ def upload(json_dic,jsonHash):
                 newjson = nuevoHash(jsonHash)
                 DATABASE[nombre][filename].update(newjson)
             else:
-
                 newdic=nuevoDict(json_dic, link)
                 DATABASE[nombre].update(newdic)
+                newjson = nuevoHash(jsonHash)
+                DATABASE[nombre][filename].update(newjson)
                 
             actualizaDB()
             newdbhash ={jsonHash['hash']:filename}
