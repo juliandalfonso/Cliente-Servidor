@@ -83,7 +83,7 @@ def downloadFile(user,file_dir,response, archivo):
 def menuDatos():
 
     os.system('cls||clear')
-    print('1.Upload\n2.Sharelink\n3.List\n4.Download\n')
+    print('1.Upload\n2.Sharelink\n3.List\n4.Download\n5.Salir\n')
     print('Seleccione una opcion: ')
     selector = str(input())
     
@@ -129,6 +129,11 @@ def menuDatos():
         print('\nIngrese el link de descarga: ')
         file_dir = str(input())
         tipo = 'downloadlink'
+    #Salir
+    elif selector == '5':
+        user = ''
+        file_dir=''
+        tipo=''
     print('\n')
     
     return selector, user, tipo, file_dir
@@ -253,7 +258,10 @@ while True:
             downloadFile(user,file_dir,response, mens[1])
         else:
             print(response["response"])
-
+    
+    #Salir
+    elif selector == '5':
+        break
     else:
         print('digite correctamente el comando')
     
