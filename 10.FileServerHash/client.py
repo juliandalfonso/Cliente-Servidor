@@ -141,14 +141,20 @@ def sizeArchivo(file):
     file.seek(0, os.SEEK_SET)
     return size
 
-def convertToJsonHash(chunkHash,chunkCounter):
+def convertToJsonHash(chunkHash,chunkCounter,file_hash):
     crearJson = json.dumps(#json.dumps convierte dict a json
         {
             "hash" : chunkHash,
-            "chunkCounter" : chunkCounter, #tipo (upload, download, list, share)
+            "chunkCounter" : chunkCounter,
+            "file_hash":file_hash
         }
     )
     return crearJson
+
+def getFileHash(file):
+    sha1Hash = hashlib.sha1(file)
+    sha1Hashed = sha1Hash.hexdigest()
+    return sha1Hashed
 #?-----------------------------FUNCIONES-----------------------------------------
 
 
@@ -166,8 +172,10 @@ while True:
     if selector == '1':
         #abrimos el archivo en lectura binaria
         file = open(file_dir, "rb")
+        readfile=file.read()
         #calculamos el peso del archivo
         file_size = sizeArchivo(file)
+        file_hash = getFileHash(readfile)
         #calculamos el porcentaje segun el peso del archivo y el chunksize
         porcentaje = (CHUNK_SIZE*100)/file_size
         contador = 0 #lleva la cuenta del porcentaje
@@ -180,7 +188,7 @@ while True:
             #manejo de hashes
             sha1.update(chunk)
             chunkHash= sha1.hexdigest()#retorna hash tipo string
-            jsonHash = convertToJsonHash(chunkHash,chunkCounter).encode('utf-8')
+            jsonHash = convertToJsonHash(chunkHash,chunkCounter,file_hash).encode('utf-8')
             
             #enviamos la parte del archivo al server
             socket.send_multipart([jsonencoded, chunk, jsonHash])
@@ -188,17 +196,21 @@ while True:
             chunk = file.read(CHUNK_SIZE)
             #incrementamos contador de chunks
             chunkCounter +=1
-            #imprimimos el porcentaje enviado hasta ahora
-            contador += porcentaje
-            if contador>100:
-                contador=100
-            print(str("{:.1f}".format(contador)) + '%')
             
             #recibimos la respuesta del server
             mensaje = socket.recv_string()
             if mensaje=='archivoexiste':
                 print('el archivo ya existe')
                 chunk=False
+            elif mensaje=='actualizapuntero':
+                print('el archivo ya existe, puntero actualizado')
+                chunk=False
+            else:
+                #imprimimos el porcentaje enviado hasta ahora
+                contador += porcentaje
+                if contador>100:
+                    contador=100
+                print(str("{:.1f}".format(contador)) + '%')
         file.close()
 
     #sharelink
