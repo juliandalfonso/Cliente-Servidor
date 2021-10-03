@@ -56,22 +56,30 @@ def actualizaHASHDB():
 
 #crea un nuevo diccionario con el link y el archivo
 def nuevoHash(jsonHash):
-    newdic = {jsonHash['chunkCounter']:jsonHash['hash']}
+    newdic ={jsonHash['chunkCounter']:jsonHash['hash']}
     return newdic
 
 #crea nuevo diccionario con el nombre del usuario, el link y el archivo
 def nuevoUsuario(json_dic, link):
     nombre = json_dic["usuario"]
     filename = json_dic["filename"]
-    newuser =   { nombre : {link : filename,
-              filename : {jsonHash['chunkCounter']:jsonHash['hash']}}}
+    newuser =   { nombre : {
+              filename : {
+                  'parts':{
+                      jsonHash['chunkCounter']:jsonHash['hash']
+                  },
+                  'link' : link,
+                  }}}
     return newuser
 
 #crea nuevo diccionario con el nombre del usuario, el link y el archivo
 def nuevoDict(json_dic, link):
     filename = json_dic["filename"]
-    newdic =  {link : filename,
-              filename : {}}
+    newdic =  {
+              filename : {
+                  'parts':{},
+                  'link' : link,
+              }}
     return newdic
 
 #decodifica el json y lo convierte a diccionario
@@ -87,7 +95,7 @@ def checkFilename(json_dict, DATABASE):
     nombreasubir = json_dict["usuario"]
     archivoasubir = json_dict["filename"]
     for nombres, archivos in DATABASE.items():
-        for link, filename in archivos.items():
+        for filename, link in archivos.items():
             if nombreasubir == nombres and archivoasubir == filename:
                 existe = True
     return existe
@@ -132,14 +140,14 @@ def upload(json_dic,jsonHash):
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         else:
-            if checkLink(json_dic, DATABASE):    
+            if checkFilename(json_dic, DATABASE):    
                 newjson = nuevoHash(jsonHash)
-                DATABASE[nombre][filename].update(newjson)
+                DATABASE[nombre][filename]['parts'].update(newjson)
             else:
                 newdic=nuevoDict(json_dic, link)
                 DATABASE[nombre].update(newdic)
                 newjson = nuevoHash(jsonHash)
-                DATABASE[nombre][filename].update(newjson)
+                DATABASE[nombre][filename]['parts'].update(newjson)
                 
             actualizaDB()
             newdbhash ={jsonHash['hash']:filename}
