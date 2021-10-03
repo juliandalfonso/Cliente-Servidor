@@ -1,22 +1,14 @@
 
 #todo:--------------------------------------------------
     #recibir hashes por partes #!LISTO
-    #guardar varios archivos sin formato por hashes
+    #guardar varios archivos sin formato por hashes #!LISTO
     #crear hash_DB.json
         #apuntadores de hashes al archivo completo
         
 '''{
-    "julian": {
-        "51b2521c-1d22-4a4c-8d72-05dbc81a2b46": "hola2.txt",
-        "hola2.txt": {
-            0 : hash0,
-            1 : hash1,
-            2 : hash2        
-        }
-    },
-    "juan": {
-        "ad9be9a5-bb25-4b87-99b5-3596a36ae409": "ACUERDO_DE_PAGO.pdf"
-    }
+    "hash1":"filename.txt"
+    "hash2":"filename2.pdf"
+    "hash3":"filename3.txt"
 }
 '''
 #todo:--------------------------------------------------
@@ -25,7 +17,7 @@ import zmq # libreria sockets
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
 import os #para crear las nuevas carpetas y checkear su existencia
-import time
+
 
 #?-----------Conexion con CLIENT-------------
 context = zmq.Context()
@@ -44,11 +36,25 @@ def leeDATABASE():
     DATABASE = json.loads(data)
     file.close()
     return DATABASE
+
+#lee el contenido de DATABASE.json y retorna su contenido
+def leeHASHDATABASE():
+    file = open("./HASH_DATABASE.json", "r")
+    data=file.read()
+    HASH_DATABASE = json.loads(data)
+    file.close()
+    return HASH_DATABASE
     
 #escribe el nuevo contenido en la BD DATABASE.json
 def actualizaDB():
     file = open("./DATABASE.json", "w")
     appendjson = json.dumps(DATABASE, indent=4)
+    file.write(appendjson)
+    file.close()
+
+def actualizaHASHDB():
+    file = open("./HASH_DATABASE.json", "w")
+    appendjson = json.dumps(HASH_DATABASE, indent=4)
     file.write(appendjson)
     file.close()
 
@@ -122,7 +128,9 @@ def upload(json_dic,jsonHash):
             newdic=nuevoDict(json_dic, link)
             DATABASE[nombre].update(newdic)
         actualizaDB()
-        #!actualizaKey_DB()
+        newdbhash ={jsonHash['hash']:filename}
+        HASH_DATABASE.update(newdbhash)
+        actualizaHASHDB()
         
         #enviamos la respuesta al cliente
         response = f'\nSe agregó el archivo:{filename} al usuario {nombre}\n'
@@ -136,7 +144,10 @@ def upload(json_dic,jsonHash):
         #actualizamos el nuevo usuario en la BD
         DATABASE.update(newuser)
         actualizaDB()
-        #!actualizaKey_DB()
+        
+        newdbhash ={jsonHash['hash']:filename}
+        HASH_DATABASE.update(newdbhash)
+        actualizaHASHDB()
         #respondemos al cliente
         response = f'\nnuevo usuario {nombre} con archivo {filename}\n'
         socket.send_string(response)
@@ -268,6 +279,8 @@ while True:
     mens = socket.recv_multipart()
     #cargamos la base de datos en DATABASE
     DATABASE= leeDATABASE()
+    #cargamos la base de datos en DATABASE
+    HASH_DATABASE= leeHASHDATABASE()
     #primera parte del mensaje
     json_dic = procesaJson(mens[0])
     
