@@ -184,15 +184,22 @@ while True:
             
             #enviamos la parte del archivo al server
             socket.send_multipart([jsonencoded, chunk, jsonHash])
-            #recibimos la respuesta del server
-            mensaje = socket.recv_string()
             #leemos el siguiente chunk
             chunk = file.read(CHUNK_SIZE)
             #incrementamos contador de chunks
             chunkCounter +=1
             #imprimimos el porcentaje enviado hasta ahora
             contador += porcentaje
+            if contador>100:
+                contador=100
             print(str("{:.1f}".format(contador)) + '%')
+            
+            #recibimos la respuesta del server
+            mensaje = socket.recv_string()
+            print(mensaje)
+            if mensaje=='archivoexiste':
+                print('el archivo ya existe')
+                chunk=False
         file.close()
 
     #sharelink

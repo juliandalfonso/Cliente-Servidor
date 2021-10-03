@@ -25,6 +25,7 @@ import zmq # libreria sockets
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
 import os #para crear las nuevas carpetas y checkear su existencia
+import time
 
 #?-----------Conexion con CLIENT-------------
 context = zmq.Context()
@@ -90,11 +91,23 @@ def checkFilename(json_dict, DATABASE):
                 existe = True
     return existe
 
+#revisa la existencia de un archivo y devuelve booleano 
+def checkLink(json_dict, DATABASE):
+    existe = False
+    nombreasubir = json_dict["usuario"]
+    archivoasubir = json_dict["filename"]
+    for nombres, archivos in DATABASE.items():
+        for link, filename in archivos.items():
+            if nombreasubir == nombres and archivoasubir == filename:
+                existe = True
+    return existe
+
 #actualizamos la DATABASE.json con el nuevo archivo
 def upload(json_dic,jsonHash):
+
     #cargamos el usuario y el archivo 
     nombre = json_dic["usuario"]
-    file_dir = json_dic["filename"] 
+    filename = json_dic["filename"] 
     
     #creaamos un nuevo id (link de descarga) - tipo string
     link = str(uuid.uuid4())
@@ -102,15 +115,17 @@ def upload(json_dic,jsonHash):
     #verificamos la existencia del usuario
     if nombre in DATABASE:
         
-        newdic=nuevoDict(json_dic, link)
-        DATABASE[nombre].update(newdic)            
-        newjson = nuevoHash(jsonHash)
-        DATABASE[nombre][file_dir].update(newjson)
+        if checkLink(json_dic, DATABASE):    
+            newjson = nuevoHash(jsonHash)
+            DATABASE[nombre][filename].update(newjson)
+        else:
+            newdic=nuevoDict(json_dic, link)
+            DATABASE[nombre].update(newdic)
         actualizaDB()
         #!actualizaKey_DB()
         
         #enviamos la respuesta al cliente
-        response = f'\nSe agregó el archivo:{file_dir} al usuario {nombre}\n'
+        response = f'\nSe agregó el archivo:{filename} al usuario {nombre}\n'
         socket.send_string(response)
         print('[SERV] archivo agregado')
     
@@ -123,7 +138,7 @@ def upload(json_dic,jsonHash):
         actualizaDB()
         #!actualizaKey_DB()
         #respondemos al cliente
-        response = f'\nnuevo usuario {nombre} con archivo {file_dir}\n'
+        response = f'\nnuevo usuario {nombre} con archivo {filename}\n'
         socket.send_string(response)
         print('[SERV] usuario y carpeta creados y archivo agregado')
 
@@ -264,9 +279,10 @@ while True:
         print(f"part{jsonHash['chunkCounter']} -> {jsonHash['hash']}")
         #revisamos si el archivo existe
         existe = checkFilename(json_dic, DATABASE)
-        if existe:
-            upload(json_dic,jsonHash)
-            cargaChunks(chunk,jsonHash)
+        print(jsonHash['chunkCounter'])
+        if existe and jsonHash['chunkCounter']==0:
+            print('Entreeeeeeeeeeeeeee')
+            socket.send_string('archivoexiste')
         else:
             upload(json_dic,jsonHash)
             cargaChunks(chunk,jsonHash)
