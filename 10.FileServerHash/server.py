@@ -6,15 +6,23 @@
         #apuntadores de hashes al archivo completo
         
     #!POR CORREGIR
-        #al chequear hash solo funciona cuando es un usuario diferente que va a subir el archivo
-        #cuando un usuario ya existe en DB e intenta subir un archivo que ya existe, se guarda un diccionario vacio
-        
+        #file_hash se sobreescribe por cada archivo que se intenta subir 
+        #psoible solucion:
 '''{
-    "hash1":"filename.txt"
-    "hash2":"filename2.pdf"
-    "hash3":"filename3.txt"
+    "camilo": {
+        "f5961d9d-4d91-4c49-8cc2-43b83ca7ab4b": "code.png",
+        "file_hash": {
+            "code.png": "3caed3c115660bcaea8df25e818a4a993e27a567"
+            "ACUERDO_DE_PAGO.pdf": "c850f0e25702694f7d50eebed266bfb0093a5e4c"
+            },
+        "code.png": {
+            "0": "3caed3c115660bcaea8df25e818a4a993e27a567"
+        }
+    }
 }
 '''
+        
+
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
