@@ -200,7 +200,7 @@ while True:
             #recibimos la respuesta del server
             mensaje = socket.recv_string()
             if mensaje=='archivoexiste':
-                print('el archivo ya existe')
+                print(f'{user} ya subio un archivo con el nombre {file_dir}')
                 chunk=False
             elif mensaje=='actualizapuntero':
                 print('el archivo ya existe, puntero actualizado')

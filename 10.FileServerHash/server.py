@@ -21,8 +21,6 @@
     }
 }
 '''
-        
-
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
@@ -76,19 +74,17 @@ def nuevoHash(jsonHash):
     return newdic
 
 #crea nuevo diccionario con el nombre del usuario, el link y el archivo
-def nuevoUsuario(json_dic, link, jsonHash):
+def nuevoUsuario(json_dic, link):
     nombre = json_dic["usuario"]
     filename = json_dic["filename"]
     newuser =   { nombre : {link : filename,
-                        "file_hash":jsonHash["file_hash"],
               filename : {jsonHash['chunkCounter']:jsonHash['hash']}}}
     return newuser
 
 #crea nuevo diccionario con el nombre del usuario, el link y el archivo
-def nuevoDict(json_dic, link,jsonHash):
+def nuevoDict(json_dic, link):
     filename = json_dic["filename"]
     newdic =  {link : filename,
-            "file_hash":jsonHash["file_hash"],
               filename : {}}
     return newdic
 
@@ -122,13 +118,12 @@ def checkLink(json_dict, DATABASE):
     return existe
 
 
-def checkHash(jsonHash, DATABASE):
+def checkHash(jsonHash, HASH_DATABASE):
     existe = False
-    hashasubir = jsonHash["file_hash"]
-    for nombres, archivos in DATABASE.items():
-        for key, file_hash in archivos.items():
-            if hashasubir == file_hash:
-                existe = True
+    file_hash = jsonHash['file_hash']
+    for hashes, archivos in HASH_DATABASE.items():
+        if file_hash == hashes:
+            existe = True
     return existe
 
 #actualizamos la DATABASE.json con el nuevo archivo
@@ -145,7 +140,7 @@ def upload(json_dic,jsonHash):
     if nombre in DATABASE:
         
         #validamos la existencia del hash para ahorrar memoria
-        hash_existe = checkHash(jsonHash, DATABASE)
+        hash_existe = checkHash(jsonHash, HASH_DATABASE)
         if hash_existe and jsonHash['chunkCounter']==0:
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
@@ -155,7 +150,7 @@ def upload(json_dic,jsonHash):
                 DATABASE[nombre][filename].update(newjson)
             else:
 
-                newdic=nuevoDict(json_dic, link, jsonHash)
+                newdic=nuevoDict(json_dic, link)
                 DATABASE[nombre].update(newdic)
                 
             actualizaDB()
@@ -171,13 +166,13 @@ def upload(json_dic,jsonHash):
     #caso en que el usuario no esté en la BD
     else:
         #validamos la existencia del hash para ahorrar memoria
-        hash_existe = checkHash(jsonHash, DATABASE)
+        hash_existe = checkHash(jsonHash, HASH_DATABASE)
         if hash_existe:
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         else:
             #creamos el diccionario del nuevo usuario
-            newuser = nuevoUsuario(json_dic, link,jsonHash)
+            newuser = nuevoUsuario(json_dic, link)
             #actualizamos el nuevo usuario en la BD
             DATABASE.update(newuser)
             actualizaDB()
@@ -328,8 +323,9 @@ while True:
         chunk = mens[1]
         jsonHash = procesaJson(mens[2])
         
-        #revisamos si el archivo existe
+        #revisamos si el archivo existe y si ya se encuentra en la BD del usuario
         archivo_existe = checkFilename(json_dic, DATABASE)
+        #si el usuario intenta subir un archivo que ya subio antes
         if archivo_existe and jsonHash['chunkCounter']==0:
             socket.send_string('archivoexiste')
         else:
