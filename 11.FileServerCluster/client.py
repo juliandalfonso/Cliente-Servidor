@@ -1,17 +1,12 @@
 
 #todo:-----------------------------------------
-    #corregir el porcentaje de descarga
-    #(desfazado a veces)#!FALTA--
-    
-    #UPLOAD #!LISTO
-    #SHARELINK #!LISTO
-    #DOWNLOAD #!LISTO
-    #LIST #!LISTO
+    #documentar y organizar codigo #!LISTO
 #todo:-----------------------------------------
 
 import zmq # libreria sockets 
 import json #diccionario python a json 
 import os #sistema operativo para las rutas de los archivos
+import hashlib #maneja encriptacion de archivos sha1-sha256
 
 #?-----------Conexion con SERVER-------------
 context = zmq.Context()
@@ -21,6 +16,9 @@ socket.connect('tcp://localhost:5555')
 
 #Bittorrent block = 250KB -> 250000B
 CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
+
+#objeto que permite encriptar un archivo a 160bits - 20 bytes
+sha1 = hashlib.sha1()
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #recibe los argumentos del usuario y los convierte en json
@@ -48,41 +46,54 @@ def downloadFile(user,file_dir,response, archivo):
     newfilepath = './Clientfiles/'+user+'/'+file_dir
     #si existe la carpeta del usuario la sobre escribe, sino la crea
     os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
-    #tamaño del archivo respondido por el server
-    size=response["size"]
     
-    #posicion (puntero) del chunk que se le solicita al servidor
-    chunk = 0
-    #hasta que el puntero llegue al final del archivo
-    while chunk <= size:
+    #numero de partes que contiene el archivo
+    numberofparts=response["numberofparts"]
+    
+    #contador para iterar todas las partes del archivo
+    counterofparts = 1
+    
+    #escribimos la primera parte solicitada del archivo, la parte o hash "cero"
+    file = open(newfilepath, "ab")
+    file.write(archivo)
+
+    #hasta que el puntero lee todas las partes o hashes   
+    while counterofparts < numberofparts:
+        
+        #imprimimos el porcentaje de descarga
+        porcentaje = (counterofparts*100)/(numberofparts-1)
+        print(str("{:.1f}".format(porcentaje)) + '%')
+        
+        
+        #Actualizamos el puntero/contador y lo codificamos
+        partjson = json.dumps({'part': counterofparts })
+        partencoded = partjson.encode('utf-8')
+        
+        #solicitamos la parte al server
+        socket.send_multipart([jsonencoded, partencoded])
+        #recibimos la respuesta del server
+        mens,archivo_respuesta = socket.recv_multipart()
+        
+        #guardamos la nueva parte del archivo e iteramos nuevamente
+        archivo = archivo_respuesta
         #abre el nuevo archivo en modo append y escribimos
         file = open(newfilepath, "ab")
         file.write(archivo)
         
-        #actualizamos el puntero chunk
-        chunk += CHUNK_SIZE
+        #incrementamos el contador de partes para la siguiente iteracion
+        counterofparts += 1
         
-        #imprimimos el porcentaje enviado hasta ahora
-        porcentaje = (chunk*100)/size
-        print(str("{:.1f}".format(porcentaje)) + '%')
-        
-        #Actualizamos el puntero y lo codificamos
-        chunkjson = json.dumps({'chunk': chunk })
-        chunkencoded = chunkjson.encode('utf-8')
-        
-        #enviamos el chunk al server
-        socket.send_multipart([jsonencoded, chunkencoded])
-        #recibimos la respuesta del server
-        mens,archivo_respuesta = socket.recv_multipart()
-        #guardamos la nueva parte del archivo e iteramos nuevamente
-        archivo = archivo_respuesta
+    #si el archivo solo contiene una parte imprime 100%
+    if numberofparts == 1:
+        print(str("{:.1f}".format(100)) + '%')
+    #cerramos el archivo
     file.close()
 
 #logica del menú para mejor experiencia de usuario
 def menuDatos():
 
     os.system('cls||clear')
-    print('1.Upload\n2.Sharelink\n3.List\n4.Download\n')
+    print('1.Upload\n2.Sharelink\n3.List\n4.Download\n5.Salir\n')
     print('Seleccione una opcion: ')
     selector = str(input())
     
@@ -128,6 +139,11 @@ def menuDatos():
         print('\nIngrese el link de descarga: ')
         file_dir = str(input())
         tipo = 'downloadlink'
+    #Salir
+    elif selector == '5':
+        user = ''
+        file_dir=''
+        tipo=''
     print('\n')
     
     return selector, user, tipo, file_dir
@@ -140,6 +156,22 @@ def sizeArchivo(file):
     size = file.tell()
     file.seek(0, os.SEEK_SET)
     return size
+
+def convertToJsonHash(chunkHash,chunkCounter,file_hash):
+    crearJson = json.dumps(#json.dumps convierte dict a json
+        {
+            "hash" : chunkHash, #hash del chunk o parte
+            "chunkCounter" : chunkCounter, #contador del numero de partes enviadas
+            "file_hash":file_hash #hash definitivo o final del archivo
+        }
+    )
+    return crearJson
+
+#recibe el archivo y retorna su hash
+def getFileHash(file):
+    sha1Hash = hashlib.sha1(file)
+    sha1Hashed = sha1Hash.hexdigest()
+    return sha1Hashed
 #?-----------------------------FUNCIONES-----------------------------------------
 
 
@@ -157,24 +189,58 @@ while True:
     if selector == '1':
         #abrimos el archivo en lectura binaria
         file = open(file_dir, "rb")
+        readfile=file.read()
+        
         #calculamos el peso del archivo
         file_size = sizeArchivo(file)
+        #obtenemos el hash del archivo completo
+        file_hash = getFileHash(readfile)
         #calculamos el porcentaje segun el peso del archivo y el chunksize
         porcentaje = (CHUNK_SIZE*100)/file_size
         contador = 0 #lleva la cuenta del porcentaje
         
         #leemos solo el numero de bytes especificados en CHUNK_SIZE
         chunk = file.read(CHUNK_SIZE)
+        chunkCounter = 0 #cuenta cuantas partes se envian al servidor
         while chunk:
+            
+            #manejo de hashes
+            #hasheamos solo el pedazo/chunk del archivo
+            sha1.update(chunk) 
+            chunkHash= sha1.hexdigest()#retorna hash tipo string
+            
+            #si el archivo se separa en mas de una parte
+            if file_size>CHUNK_SIZE:
+                jsonHash = convertToJsonHash(chunkHash,chunkCounter,file_hash).encode('utf-8')
+            #caso en que el arvhivo solo sea un chunk
+            elif file_size<=CHUNK_SIZE:
+                jsonHash = convertToJsonHash(file_hash,chunkCounter,file_hash).encode('utf-8')
+
+            
             #enviamos la parte del archivo al server
-            socket.send_multipart([jsonencoded, chunk])
-            #recibimos la respuesta del server
-            mensaje = socket.recv_string()
+            socket.send_multipart([jsonencoded, chunk, jsonHash])
             #leemos el siguiente chunk
             chunk = file.read(CHUNK_SIZE)
-            #imprimimos el porcentaje enviado hasta ahora
-            contador += porcentaje
-            print(str("{:.1f}".format(contador)) + '%')
+            #incrementamos contador de chunks
+            chunkCounter +=1
+            
+            #recibimos la respuesta del server
+            mensaje = socket.recv_string()
+            #si el usuario ya subio un archivo con ese nombre
+            if mensaje=='archivoexiste':
+                print(f'{user} ya subio un archivo con el nombre {file_dir}')
+                chunk=False
+            #si el archivo ya existia en el server y se actualiza el puntero
+            elif mensaje=='actualizapuntero':
+                print('el archivo existia en [SERV], puntero actualizado -> subido correctamente')
+                chunk=False
+            else:
+                #imprimimos el porcentaje enviado hasta ahora
+                contador += porcentaje
+                if contador>100:
+                    contador=100
+                print(str("{:.1f}".format(contador)) + '%')
+        #cerramos el archivo
         file.close()
 
     #sharelink
@@ -192,25 +258,30 @@ while True:
         #esperamos la respuesta y la imprimimos
         response = socket.recv_string()
         print(response)
+    
     #download
     elif selector == '4':
         #inicializamos el apuntador en cero
-        chunkjson = json.dumps({'chunk': 0})
+        partjson = json.dumps({'part': 0})
         #lo codificamos para enviarlo
-        chunkencoded = chunkjson.encode('utf-8')
-        socket.send_multipart([jsonencoded,chunkencoded])
+        partencoded = partjson.encode('utf-8')
+        socket.send_multipart([jsonencoded,partencoded])
         
-        #recibimos la respuesta del server
+        #recibimos la respuesta del server con la primera parte a descargar
         mens = socket.recv_multipart()
         response = procesaJson(mens[0])
         
-        #en caso de que el servidor haya encontrado el archivo
+        #en caso de que el servidor haya encontrado el archivo lo descarga
         if response["encontrado"]:
             file_dir = response["filename"]
             downloadFile(user,file_dir,response, mens[1])
+        #cuando el archivo no fue encontrado o el link es invalido
         else:
             print(response["response"])
-
+    
+    #Salir
+    elif selector == '5':
+        break
     else:
         print('digite correctamente el comando')
     
