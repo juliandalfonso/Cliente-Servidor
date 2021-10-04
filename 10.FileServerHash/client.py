@@ -1,7 +1,6 @@
 
 #todo:-----------------------------------------
-    #documentar el codigo para la entrega 
-    #borrar lineas que no se usen
+    #documentar y organizar codigo #!FALTA
 #todo:-----------------------------------------
 
 import zmq # libreria sockets 

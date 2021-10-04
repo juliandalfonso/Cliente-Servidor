@@ -2,10 +2,9 @@
 #todo:--------------------------------------------------
     #hacer readme.md #!LISTO
     #implementar descargas por hashes #!LISTO
+    #implementar actualizapuntero() #!LISTO
     
-    #! Falta implementar actualizapuntero()
-    #acutliza puntero sucede cuando un usuario va a subir un archivo que ya existe (hash en HASH_DB.json)
-    #documentar el codigo para la entrega
+    #documentar y organizar codigo #!FALTA
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
@@ -143,16 +142,11 @@ def actualizapuntero(jsonHash, HASH_DATABASE, DATABASE):
                 if partolink == 'link':
                     if filename == archivo and usuarioOriginal==nombres:
                         link=parts
-    #todo: crear nuevo json
-    newlinkcopyjson={filename:
-        {
-            'link_copy':link
-        }}
     # print(f'hash solicitado: {file_hash}\n')
     # print(f'archivo asociado: {filename}\n')
     # print(f'usuario Original: {usuarioOriginal}\n')
     # print(f'link de descarga: {link}\n')
-    return newlinkcopyjson
+    return filename, link
 
 #actualizamos la DATABASE.json con el nuevo archivo
 def upload(json_dic,jsonHash):
@@ -170,8 +164,10 @@ def upload(json_dic,jsonHash):
         #validamos la existencia del hash para ahorrar memoria
         hash_existe = checkHash(jsonHash, HASH_DATABASE)
         if hash_existe and jsonHash['chunkCounter']==0:
-            #!actualizapuntero()
-            newlinkcopyjson = actualizapuntero(jsonHash, HASH_DATABASE, DATABASE)
+            #cuando el usuario intenta subir un hash que ya existe
+            #se crea un link-copy como puntero al archivo original
+            filename, link = actualizapuntero(jsonHash, HASH_DATABASE, DATABASE)
+            newlinkcopyjson={filename:{'link_copy':link}}
             DATABASE[nombre].update(newlinkcopyjson)
             actualizaDB()
             print('[SERV]archivo ya existe, puntero actualizado')
@@ -202,6 +198,13 @@ def upload(json_dic,jsonHash):
         hash_existe = checkHash(jsonHash, HASH_DATABASE)
         if hash_existe:
             #!actualizapuntero()
+            filename, link = actualizapuntero(jsonHash, HASH_DATABASE, DATABASE)
+            newlinkcopyjson =   { nombre : {
+              filename : {
+                  'link_copy' : link,
+                  }}}            
+            DATABASE.update(newlinkcopyjson)
+            actualizaDB()
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         else:
