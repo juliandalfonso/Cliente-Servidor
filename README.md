@@ -32,4 +32,4 @@ Ventajas y desventajas.
 
 ---
 ### Nota:
-Cada carpeta es un entregable o una versión mejorada con modificaciones a medida que se avanza en la clase
+Cada carpeta es un entregable de una tarea de la asignatura o una versión mejorada(de una tarea previa) con modificaciones a medida que se avanza en la clase
