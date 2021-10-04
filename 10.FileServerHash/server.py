@@ -115,7 +115,6 @@ def checkLink(json_dict, DATABASE):
 def checkHash(jsonHash, HASH_DATABASE):
     existe = False
     file_hash = jsonHash['file_hash']
-    print(file_hash)
     for hashes, archivos in HASH_DATABASE.items():
         if file_hash == hashes:
             existe = True
@@ -214,7 +213,6 @@ def getPart(usuario,nombrearchivo, part,DATABASE):
                 if partolink == 'parts':
                     for hashnumber,file_hash in parts.items():
                         if usuario == nombres and nombrearchivo==archivo:
-                            print(f'hasnumber: {hashnumber} == {part}')
                             if int(hashnumber)==int(part):
                                 file_hash_name = file_hash
                                     
