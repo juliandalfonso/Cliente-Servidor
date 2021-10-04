@@ -1,13 +1,10 @@
 
 #todo:--------------------------------------------------
-    #recibir hashes por partes #!LISTO
-    #guardar varios archivos sin formato por hashes #!LISTO
-    #crear hash_DB.json#!LISTO
-        #apuntadores de hashes al archivo completo
-    #cuando un usuario suba un archivo que ya existe -> actualizar su perfil en DB.json #!LISTO
-    #modificar punteros y links al subir un archivo que ya existe es decir cuando ya existe el hash#!LISTO
-    
-    #actualizar sharelink por usuario y por "all"
+    #implementar descargas por hashes #!LISTO
+    #! Falta implementar actualizapuntero()
+    #acutliza puntero sucede cuando un usuario va a subir un archivo que ya existe (hash en HASH_DB.json)
+    #documentar el codigo para la entrega
+    #hacer readme.md 
     
 #todo:--------------------------------------------------
 
@@ -15,6 +12,7 @@ import zmq # libreria sockets
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
 import os #para crear las nuevas carpetas y checkear su existencia
+import time
 
 
 #?-----------Conexion con CLIENT-------------
@@ -139,6 +137,7 @@ def upload(json_dic,jsonHash):
         #validamos la existencia del hash para ahorrar memoria
         hash_existe = checkHash(jsonHash, HASH_DATABASE)
         if hash_existe and jsonHash['chunkCounter']==0:
+            #!actualizapuntero()
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         else:
@@ -166,6 +165,7 @@ def upload(json_dic,jsonHash):
         #validamos la existencia del hash para ahorrar memoria
         hash_existe = checkHash(jsonHash, HASH_DATABASE)
         if hash_existe:
+            #!actualizapuntero()
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         else:
@@ -205,37 +205,71 @@ def segmentaArchivo(usuario, nombrearchivo, chunk):
     file.close()
     return data
 
+#funcion que devuelve la parte solicitada de un archivo
+def getPart(usuario,nombrearchivo, part,DATABASE):
+    file_hash_name=''
+    for nombres, archivossubidos in DATABASE.items():
+        for archivo, contenido in archivossubidos.items():
+            for partolink, parts in contenido.items():
+                if partolink == 'parts':
+                    for hashnumber,file_hash in parts.items():
+                        if usuario == nombres and nombrearchivo==archivo:
+                            print(f'hasnumber: {hashnumber} == {part}')
+                            if int(hashnumber)==int(part):
+                                file_hash_name = file_hash
+                                    
+    newfilepath = './Serverfiles/'+file_hash_name
+    #si existe la carpeta del usuario la sobre escribe, sino la crea 
+    file = open(newfilepath, "rb")
+    data = file.read()
+    file.close()
+    return data
+
+#funcion que devuelve el numero de partes de un archivo
+def numberOfParts(usuario, nombrearchivo):
+    numberofparts=0
+    for nombres, items in DATABASE.items():
+        for filename, content in items.items():
+            for files, parts in content.items():
+                if usuario == nombres and nombrearchivo==filename:
+                    if files == 'parts':
+                        numberofparts = len(parts)
+    return numberofparts
+
 #busca un archivo segun el link y se lo envia al cliente en caso de encontrarlo
-def download(DATABASE,dllink,chunk):
+def download(DATABASE,dllink,part):
     
     encontrado = False
     nombrearchivo =''
     usuario = ''
+    #revisamos si el link solicitado existe
     for nombres, items in DATABASE.items():
-        for link, filename in items.items():
-            if link == dllink:
-                nombrearchivo = filename
-                usuario = nombres
-                response = f'\nHa solicitado descargar {filename} de {nombres}\n'
-                encontrado = True
+        for filename, content in items.items():
+            for links, dblink in content.items():
+                if links == 'link' and dllink==dblink:
+                    nombrearchivo = filename
+                    usuario = nombres
+                    response = f'\nHa solicitado descargar {filename} de {nombres}\n'
+                    encontrado = True
                 
     
     #en caso de encontrar el archivo con el link
     if encontrado:
-        size = sizeArchivo(usuario, nombrearchivo)
+        #numero solicitado a descargar}
+        numberofparts = numberOfParts(usuario, nombrearchivo)
         
         json_response = json.dumps(
             {
                 'encontrado': True,
                 'response': response,
                 'filename': nombrearchivo,
-                'size': size
+                'numberofparts': numberofparts
             }
         )
         json_response_encoded = json_response.encode('utf-8')
         
-        filesegment = segmentaArchivo(usuario,nombrearchivo, chunk)
-        socket.send_multipart([json_response_encoded,filesegment])
+        filePart = getPart(usuario,nombrearchivo, part,DATABASE)
+        socket.send_multipart([json_response_encoded,filePart])
         
     else:
         response = '\nlink no encontrado'
@@ -352,8 +386,8 @@ while True:
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'downloadlink':
         dllink = json_dic["filename"]
-        chunkjson = json.loads(mens[1])
-        chunk = chunkjson["chunk"]
-        download(DATABASE, dllink, chunk)
+        partjson = json.loads(mens[1])
+        part = partjson["part"]
+        download(DATABASE, dllink, part)
     
 #!-------------------Logica del SERVER -------------------------

@@ -1,9 +1,8 @@
 
 #todo:-----------------------------------------
-    #Implmentar funcion que saca hash a un archivo #!LISTO
-    #agregar hash al json que se envia #!LISTO
-    #implementar descarga por hashes
-    #implementar opcion de salir
+    #implementar opcion de salir #!LISTO
+    #implementar descarga por hashes #!LISTO
+    
 #todo:-----------------------------------------
 
 import zmq # libreria sockets 
@@ -50,33 +49,43 @@ def downloadFile(user,file_dir,response, archivo):
     #si existe la carpeta del usuario la sobre escribe, sino la crea
     os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
     #tamaño del archivo respondido por el server
-    size=response["size"]
+    numberofparts=response["numberofparts"]
     
     #posicion (puntero) del chunk que se le solicita al servidor
-    chunk = 0
-    #hasta que el puntero llegue al final del archivo
-    while chunk <= size:
-        #abre el nuevo archivo en modo append y escribimos
-        file = open(newfilepath, "ab")
-        file.write(archivo)
+    counterofparts = 1
+    
+    #escribimos la primera parte
+    file = open(newfilepath, "ab")
+    file.write(archivo)
+
+    #hasta que el puntero llegue al final del archivo    
+    while counterofparts < numberofparts:
         
-        #actualizamos el puntero chunk
-        chunk += CHUNK_SIZE
-        
-        #imprimimos el porcentaje enviado hasta ahora
-        porcentaje = (chunk*100)/size
+        #imprimimos el porcentaje recibido hasta ahora
+        porcentaje = (counterofparts*100)/(numberofparts-1)
         print(str("{:.1f}".format(porcentaje)) + '%')
         
-        #Actualizamos el puntero y lo codificamos
-        chunkjson = json.dumps({'chunk': chunk })
-        chunkencoded = chunkjson.encode('utf-8')
         
+        #Actualizamos el puntero y lo codificamos
+        partjson = json.dumps({'part': counterofparts })
+        partencoded = partjson.encode('utf-8')
         #enviamos el chunk al server
-        socket.send_multipart([jsonencoded, chunkencoded])
+        socket.send_multipart([jsonencoded, partencoded])
         #recibimos la respuesta del server
         mens,archivo_respuesta = socket.recv_multipart()
         #guardamos la nueva parte del archivo e iteramos nuevamente
         archivo = archivo_respuesta
+        
+        #abre el nuevo archivo en modo append y escribimos
+        file = open(newfilepath, "ab")
+        file.write(archivo)
+        
+        #solicitamos la siguiente parte
+        counterofparts += 1
+    #si el archivo solo contiene una parte imprime 100%
+    if numberofparts == 1:
+        print(str("{:.1f}".format(100)) + '%')
+
     file.close()
 
 #logica del menú para mejor experiencia de usuario
@@ -240,13 +249,14 @@ while True:
         #esperamos la respuesta y la imprimimos
         response = socket.recv_string()
         print(response)
+    
     #download
     elif selector == '4':
         #inicializamos el apuntador en cero
-        chunkjson = json.dumps({'chunk': 0})
+        partjson = json.dumps({'part': 0})
         #lo codificamos para enviarlo
-        chunkencoded = chunkjson.encode('utf-8')
-        socket.send_multipart([jsonencoded,chunkencoded])
+        partencoded = partjson.encode('utf-8')
+        socket.send_multipart([jsonencoded,partencoded])
         
         #recibimos la respuesta del server
         mens = socket.recv_multipart()
