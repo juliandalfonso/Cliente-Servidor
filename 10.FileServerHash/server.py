@@ -1,18 +1,18 @@
 
 #todo:--------------------------------------------------
+    #hacer readme.md #!LISTO
     #implementar descargas por hashes #!LISTO
+    
     #! Falta implementar actualizapuntero()
     #acutliza puntero sucede cuando un usuario va a subir un archivo que ya existe (hash en HASH_DB.json)
     #documentar el codigo para la entrega
-    #hacer readme.md 
-    
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
 import os #para crear las nuevas carpetas y checkear su existencia
-import time
+import time #libreria para usar time.sleep() mas que todo para hacer pruebas
 
 
 #?-----------Conexion con CLIENT-------------
@@ -120,6 +120,40 @@ def checkHash(jsonHash, HASH_DATABASE):
             existe = True
     return existe
 
+#funcion que devuelve diccionario con link del archivo existente
+def actualizapuntero(jsonHash, HASH_DATABASE, DATABASE):
+    file_hash = jsonHash['file_hash']
+    filename=''
+    #todo: encontrar el hash en HASH_DATABASE.json
+    for hashes, archivos in HASH_DATABASE.items():
+        if file_hash == hashes:
+            file_hash =hashes
+            filename=archivos            
+    #todo: Encontrar el usuario que subio ese archivo
+    #todo: encontrar el link del archivo
+    usuarioOriginal = ''
+    link = ''    
+    for nombres, archivossubidos in DATABASE.items():
+        for archivo, contenido in archivossubidos.items():
+            for partolink, parts in contenido.items():
+                if partolink == 'parts':
+                    for hashnumber,file_hashes in parts.items():
+                        if filename == archivo and file_hash==file_hashes:
+                            usuarioOriginal = nombres
+                if partolink == 'link':
+                    if filename == archivo and usuarioOriginal==nombres:
+                        link=parts
+    #todo: crear nuevo json
+    newlinkcopyjson={filename:
+        {
+            'link_copy':link
+        }}
+    # print(f'hash solicitado: {file_hash}\n')
+    # print(f'archivo asociado: {filename}\n')
+    # print(f'usuario Original: {usuarioOriginal}\n')
+    # print(f'link de descarga: {link}\n')
+    return newlinkcopyjson
+
 #actualizamos la DATABASE.json con el nuevo archivo
 def upload(json_dic,jsonHash):
 
@@ -137,6 +171,9 @@ def upload(json_dic,jsonHash):
         hash_existe = checkHash(jsonHash, HASH_DATABASE)
         if hash_existe and jsonHash['chunkCounter']==0:
             #!actualizapuntero()
+            newlinkcopyjson = actualizapuntero(jsonHash, HASH_DATABASE, DATABASE)
+            DATABASE[nombre].update(newlinkcopyjson)
+            actualizaDB()
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         else:
@@ -290,7 +327,7 @@ def shareLink(json_dic, DATABASE):
         for filename, values in archivos.items():
             for claves, link in values.items():
                 if nombreacompartir == nombres and archivoacompartir == filename:
-                    if claves=='link':
+                    if claves=='link' or claves=='link_copy':
                         linkshare = link
     return linkshare
 

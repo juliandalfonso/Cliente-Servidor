@@ -1,8 +1,7 @@
 
 #todo:-----------------------------------------
-    #implementar opcion de salir #!LISTO
-    #implementar descarga por hashes #!LISTO
-    
+    #documentar el codigo para la entrega 
+    #borrar lineas que no se usen
 #todo:-----------------------------------------
 
 import zmq # libreria sockets 
@@ -224,7 +223,7 @@ while True:
                 print(f'{user} ya subio un archivo con el nombre {file_dir}')
                 chunk=False
             elif mensaje=='actualizapuntero':
-                print('el archivo ya existe, puntero actualizado')
+                print('el archivo existia en [SERV], puntero actualizado -> subido correctamente')
                 chunk=False
             else:
                 #imprimimos el porcentaje enviado hasta ahora
