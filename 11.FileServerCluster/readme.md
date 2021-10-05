@@ -1,4 +1,4 @@
-## File Server con implementación de hashes
+## File Server con Proxy y Servers
 
 Programa tipo "google Drive" que corre un servidor que escucha uno o varios clientes y almacena archivos.
 

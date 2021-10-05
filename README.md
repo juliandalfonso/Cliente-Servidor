@@ -6,7 +6,7 @@
 
 ## DESCRIPCIÓN :books:
 
-En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python.
+En este repositorio se trabajan los ejercicios prácticos desarrollados en la clase "Arquitectura Cliente-Servidor" y sus respectivos entregables, la mayoría de proyectos se desarrollan en Python, aplicando librerías como zmq, json y hashlib.
 
 ## CONTENIDO DE LA ASIGNATURA :bookmark_tabs:
 

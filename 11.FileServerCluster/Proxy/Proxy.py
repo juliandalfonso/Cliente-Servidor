@@ -1,20 +1,22 @@
 
 #todo:--------------------------------------------------
-    #implementar lógica de cluster de servidores 🔥
+    #implementar lógica de cluster de servidores 
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
 import os #para crear las nuevas carpetas y checkear su existencia
-import time #libreria para usar time.sleep() mas que todo para hacer pruebas
+import time
+
+from zmq.sugar import socket #libreria para usar time.sleep() mas que todo para hacer pruebas
 
 
-#?-----------Conexion con CLIENT-------------
+#!-------Conexion con CLIENTS Y SERVERS -------------
 context = zmq.Context()
 socket = context.socket(zmq.REP)
 socket.bind('tcp://*:5555')
-#?-----------Conexion con CLIENT-------------
+#!-------Conexion con CLIENTS Y SERVERS-------------
 
 #Bittorrent block = 250KB -> 250000B
 CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
@@ -37,14 +39,14 @@ def leeHASHDATABASE():
     return HASH_DATABASE
     
 #sobreescribe el nuevo contenido en la BD DATABASE.json
-def actualizaDB():
+def actualizaDB(DATABASE):
     file = open("./DATABASE.json", "w")
     appendjson = json.dumps(DATABASE, indent=4)
     file.write(appendjson)
     file.close()
 
 #actualiza la base de datos de los hashes HASH_DATABASE.json
-def actualizaHASHDB():
+def actualizaHASHDB(HASH_DATABASE):
     file = open("./HASH_DATABASE.json", "w")
     appendjson = json.dumps(HASH_DATABASE, indent=4)
     file.write(appendjson)
@@ -56,7 +58,7 @@ def nuevoHash(jsonHash):
     return newdic
 
 #crea nuevo diccionario con el nombre del usuario, el link, el archivo y sus partes
-def nuevoUsuario(json_dic, link):
+def nuevoUsuario(jsonHash,json_dic, link):
     nombre = json_dic["usuario"]
     filename = json_dic["filename"]
     newuser =   { nombre : {
@@ -131,7 +133,7 @@ def actualizapuntero(jsonHash, HASH_DATABASE, DATABASE):
     return filename, link
 
 #actualizamos la DATABASE.json con el nuevo archivo
-def upload(json_dic,jsonHash):
+def upload(json_dic,jsonHash, DATABASE, HASH_DATABASE):
 
     #cargamos el usuario y el archivo 
     nombre = json_dic["usuario"]
@@ -153,7 +155,7 @@ def upload(json_dic,jsonHash):
             newlinkcopyjson={filename:{'link_copy':link}}
             #actualizamos la base de datos con el nuevo link_copy
             DATABASE[nombre].update(newlinkcopyjson)
-            actualizaDB()
+            actualizaDB(DATABASE)
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         #caso en que nadie haya subido ese archivo antes
@@ -172,11 +174,11 @@ def upload(json_dic,jsonHash):
                 DATABASE[nombre][filename]['parts'].update(newjson)
             
             #actualizamos la base de datos DB
-            actualizaDB()
+            actualizaDB(DATABASE)
             #creamos un nuevo diccionario para HASH_DATABASE.json y lo agregamos
             newdbhash ={jsonHash['hash']:filename}
             HASH_DATABASE.update(newdbhash)
-            actualizaHASHDB()
+            actualizaHASHDB(HASH_DATABASE)
             
             #enviamos la respuesta al cliente
             response = f'\nSe agregó el archivo:{filename} al usuario {nombre}\n'
@@ -199,21 +201,21 @@ def upload(json_dic,jsonHash):
             
             #actualizamos la base de datos con el nuevo usuario    
             DATABASE.update(newlinkcopyjson)
-            actualizaDB()
+            actualizaDB(DATABASE)
             #enviamos la respuesta al cliente
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         #si el usuario no existe y el archivo tampoco
         else:
             #creamos el diccionario del nuevo usuario
-            newuser = nuevoUsuario(json_dic, link)
+            newuser = nuevoUsuario(jsonHash,json_dic, link)
             #actualizamos el nuevo usuario en la BD
             DATABASE.update(newuser)
-            actualizaDB()
+            actualizaDB(DATABASE)
             #agregamos el hash a HASH_DATABASE
             newdbhash ={jsonHash['hash']:filename}
             HASH_DATABASE.update(newdbhash)
-            actualizaHASHDB()
+            actualizaHASHDB(HASH_DATABASE)
             #respondemos al cliente
             response = f'\nnuevo usuario {nombre} con archivo {filename}\n'
             socket.send_string(response)
@@ -241,7 +243,7 @@ def getPart(usuario,nombrearchivo,part,DATABASE):
     return data
 
 #funcion que devuelve el numero de partes de un archivo
-def numberOfParts(usuario, nombrearchivo):
+def numberOfParts(DATABASE, usuario, nombrearchivo):
     numberofparts=0 #iniciamos en cero partes
     
     #iteramos hasta encontrar el documento 'parts' del archivo y guardamos el numero de partes que contiene
@@ -273,7 +275,7 @@ def download(DATABASE,dllink,part):
     #en caso de encontrar el archivo con el link
     if encontrado:
         #guardamos el numero de partes que contiene el archivo para enviarlo
-        numberofparts = numberOfParts(usuario, nombrearchivo)
+        numberofparts = numberOfParts(DATABASE,usuario, nombrearchivo)
         #cramos el json respuesta
         json_response = json.dumps(
             {
@@ -345,7 +347,7 @@ def listadorArchivosUsuario(json_dic,DATABASE):
                 lista += '      -'+filename + '\n'
     #en caso de encontrar el usuario
     if encontrado:
-        print('[SERV] enviando archivos al cliente ')
+        print('[SERV] enviando lista de archivos de '+usuario)
         socket.send_string(lista)
     #caso de no encontrar el usuario
     else:
@@ -363,27 +365,20 @@ def cargaChunks(archivo, jsonHash):
     file.write(archivo)
     file.close()
     
-#?-----------------------------FUNCIONES-----------------------------------------
-
-
-
-#!-------------------Logica del SERVER -------------------------
-while True:
-    #Recibimos un multipart del cliente
-    mens = socket.recv_multipart()
+def client():
     #cargamos la base de datos en DATABASE
     DATABASE= leeDATABASE()
     #cargamos la base de datos de hashes en HASH_DATABASE
     HASH_DATABASE= leeHASHDATABASE()
     #primera parte del mensaje
-    json_dic = procesaJson(mens[0])
+    json_dic = procesaJson(mens[1])
     
     #caso en que el cliente haga upload
     if json_dic["tipo"] == 'upload':
         #segunda parte del mensaje es el chunk
-        chunk = mens[1]
+        chunk = mens[2]
         #la tercera parte es el jsonhash
-        jsonHash = procesaJson(mens[2])
+        jsonHash = procesaJson(mens[3])
         
         #revisamos si el archivo existe y si ya se encuentra en la BD del usuario
         archivo_existe = checkFilename(json_dic, DATABASE)
@@ -393,7 +388,7 @@ while True:
         #si el archivo es nuevo y el nombre no esta repetido lo carga
         else:
             #guardamos el archivo en la base de datos
-            upload(json_dic,jsonHash)
+            upload(json_dic,jsonHash,DATABASE, HASH_DATABASE)
             #guardamos el archivo fisicamente
             cargaChunks(chunk,jsonHash)
     
@@ -424,10 +419,31 @@ while True:
         #guardamos el link pedido por el cliente
         dllink = json_dic["filename"]
         #guardamos partjson que contiene la parte(contador) a descargar
-        partjson = json.loads(mens[1])
+        partjson = json.loads(mens[2])
         #guardamos el contador o la parte solicitada
         part = partjson["part"]
         #llama la funcion download que envia el archivo al cliente
         download(DATABASE, dllink, part)
+
+def server():
+    print('[SERV] server conectado')
+    response = 'hola server'
+    socket.send_string('hola server')
     
+    
+
+#?-----------------------------FUNCIONES-----------------------------------------
+
+
+
+#!-------------------Logica del SERVER -------------------------
+while True:
+    #Recibimos un multipart del cliente
+    mens = socket.recv_multipart()
+    msgdecoded = mens[0].decode('utf-8')
+    
+    if msgdecoded == 'client':
+        client()
+    if msgdecoded == 'server':
+        server()
 #!-------------------Logica del SERVER -------------------------

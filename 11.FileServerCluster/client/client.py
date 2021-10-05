@@ -8,17 +8,23 @@ import json #diccionario python a json
 import os #sistema operativo para las rutas de los archivos
 import hashlib #maneja encriptacion de archivos sha1-sha256
 
-#?-----------Conexion con SERVER-------------
+
+
+#?-----------Conexion con Proxy-------------
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
 socket.connect('tcp://localhost:5555')
-#?-----------Conexion con SERVER-------------
+#?-----------Conexion con Proxy-------------
 
 #Bittorrent block = 250KB -> 250000B
 CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
 #objeto que permite encriptar un archivo a 160bits - 20 bytes
 sha1 = hashlib.sha1()
+
+clientrequestid = 'client'
+CLIENT = clientrequestid.encode('utf-8')
+
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #recibe los argumentos del usuario y los convierte en json
@@ -70,7 +76,7 @@ def downloadFile(user,file_dir,response, archivo):
         partencoded = partjson.encode('utf-8')
         
         #solicitamos la parte al server
-        socket.send_multipart([jsonencoded, partencoded])
+        socket.send_multipart([CLIENT,jsonencoded, partencoded])
         #recibimos la respuesta del server
         mens,archivo_respuesta = socket.recv_multipart()
         
@@ -175,6 +181,7 @@ def getFileHash(file):
 #?-----------------------------FUNCIONES-----------------------------------------
 
 
+
 #!-------------------Logica del CLIENT -------------------------
 while True:
 
@@ -218,7 +225,7 @@ while True:
 
             
             #enviamos la parte del archivo al server
-            socket.send_multipart([jsonencoded, chunk, jsonHash])
+            socket.send_multipart([CLIENT,jsonencoded, chunk, jsonHash])
             #leemos el siguiente chunk
             chunk = file.read(CHUNK_SIZE)
             #incrementamos contador de chunks
@@ -246,7 +253,7 @@ while True:
     #sharelink
     elif selector == '2':
         #enviamos la peticion al server
-        socket.send_multipart([jsonencoded])
+        socket.send_multipart([CLIENT,jsonencoded])
         #esperamos la respuesta y la imprimimos
         response = socket.recv_string()
         print(response)
@@ -254,7 +261,7 @@ while True:
     #list
     elif selector == '3':
         #enviamos la peticion al server
-        socket.send_multipart([jsonencoded])
+        socket.send_multipart([CLIENT,jsonencoded])
         #esperamos la respuesta y la imprimimos
         response = socket.recv_string()
         print(response)
@@ -265,7 +272,7 @@ while True:
         partjson = json.dumps({'part': 0})
         #lo codificamos para enviarlo
         partencoded = partjson.encode('utf-8')
-        socket.send_multipart([jsonencoded,partencoded])
+        socket.send_multipart([CLIENT,jsonencoded,partencoded])
         
         #recibimos la respuesta del server con la primera parte a descargar
         mens = socket.recv_multipart()
@@ -287,4 +294,4 @@ while True:
     
     #esperamos que el usuario digite enter para volver al menu
     str(input('\n\npresione enter para continuar'))
-#!-------------------Logica del cliente -------------------------
+#!-------------------Logica del cliente ------------------------- 
