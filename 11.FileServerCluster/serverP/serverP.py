@@ -1,6 +1,6 @@
 
 #todo:--------------------------------------------------
-    #documentar y organizar codigo #!LISTO
+    #implementar lógica de cluster de servidores 🔥
 #todo:--------------------------------------------------
 
 import zmq # libreria sockets 
