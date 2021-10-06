@@ -16,6 +16,12 @@ proxy_socket = context.socket(zmq.REQ)
 proxy_socket.connect('tcp://localhost:5555')
 #?-----------Conexion con Proxy-------------
 
+#!-----------Conexion con Client-------------
+context = zmq.Context()
+client_socket = context.socket(zmq.REP)
+client_socket.bind('tcp://*:1111')
+#!-----------Conexion con Client-------------
+
 msg = 'server'
 msgencoded = msg.encode('utf-8')
 proxy_socket.send_multipart([msgencoded])
