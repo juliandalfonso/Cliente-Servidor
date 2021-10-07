@@ -26,6 +26,7 @@ SERVER = {}
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DB y retorna su contenido
 def leeDB(file):
+    print(file)
     file = open(file, "r")
     data=file.read()
     DATABASE = json.loads(data)
@@ -411,34 +412,36 @@ def client(mens):
 
 
 #agrega un servidor a la BD de servers
-def nuevoServer(serverjson,SERVERS_DATABASE):
-    pass
+def nuevoServer(serverdata,SERVERS_DATABASE):
+    SERVERS_DATABASE.update(serverdata)
+    actualizaDB('SERVERS_DATABASE.json', SERVERS_DATABASE)
+    
+    
+    
 
 #funcion que chequea si ya se ha conectado un servidor previamente
-def checkServer(decodedjson):
+def checkServer(serverdata,SERVERS_DATABASE):
     existe = False
-    name = list(decodedjson)[0]
-    print(list(decodedjson)[0])
+    name = list(serverdata)[0]
+    print('[PROXY] iniciando '+name)
     #todo: encontrar si el servidor ya esta en DB
-    # for nombres, archivos in DATABASE.items():
-    #     for filename, link in archivos.items():
-    #         if nombreasubir == nombres and archivoasubir == filename:
-    #             existe = True
-    return True
+    for servers, datos in SERVERS_DATABASE.items():
+        if servers == name:
+            existe = True
+    return existe
 
-def server(decodedjson, SERVERS_DATABASE):
+def server(serverdata, SERVERS_DATABASE):
     
     #todo: revisar si ya existia el server en la DB
-    existe = checkServer(decodedjson)
+    existe = checkServer(serverdata,SERVERS_DATABASE)
     if existe:
         # DAT
-        msg = 'servidor recibido correctamente'#+SERVER['ip']
+        msg = '[PROXY]SERVER YA EXISTIA EN DB -> INICIALIZANDO'#+SERVER['ip']
         msgencoded = msg.encode('utf-8')
         socket.send_multipart([msgencoded])
     else:
-        serverjson = json.loads(decodedjson)
-        nuevoServer(serverjson)
-        msg = 'servidor recibido correctamente'#+SERVER['ip']
+        nuevoServer(serverdata,SERVERS_DATABASE)
+        msg = '[PROXY]INICIALIZANDO NUEVO SERVER'#+SERVER['ip']
         msgencoded = msg.encode('utf-8')
         socket.send_multipart([msgencoded])
     
@@ -449,7 +452,9 @@ def server(decodedjson, SERVERS_DATABASE):
 
 #?-----------------------------FUNCIONES-----------------------------------------
 
-
+DATABASE= leeDB('./DATABASE.json')
+HASH_DATABASE= leeDB('./HASH_DATABASE.json')
+SERVERS_DATABASE= leeDB('./SERVERS_DATABASE.json')
 
 #!-------------------Logica del SERVER -------------------------
 while True:
@@ -465,9 +470,8 @@ while True:
     if msgdecoded == 'client':
         client(mens)
     if msgdecoded == 'server':
-        serverdata = mens[1]
-        decodeddata = serverdata.decode('utf-8')
-        decodedjson = json.loads(decodeddata)
-        server(decodedjson,SERVERS_DATABASE)
+
+        serverdata = procesaJson(mens[1])        
+        server(serverdata,SERVERS_DATABASE)
 
 #!-------------------Logica del SERVER -------------------------

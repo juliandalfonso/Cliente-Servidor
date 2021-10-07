@@ -41,6 +41,8 @@ serverencoded = jsserver.encode('utf-8')
 proxy_socket.send_multipart([msgencoded,serverencoded])
 response = proxy_socket.recv_multipart()
 print(response[0])
+print('[SERV1]: Esperando Clientes...')
+
 
 while True:
     request = client_socket.recv_multipart()

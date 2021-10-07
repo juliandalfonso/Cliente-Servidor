@@ -16,12 +16,41 @@ proxy_socket = context.socket(zmq.REQ)
 proxy_socket.connect('tcp://localhost:5555')
 #?-----------Conexion con Proxy-------------
 
-msg = 'server'
-msgencoded = msg.encode('utf-8')
-proxy_socket.send_multipart([msgencoded])
-response = proxy_socket.recv_string()
-print(response)
+#!-----------Conexion con Client-------------
+context = zmq.Context()
+client_socket = context.socket(zmq.REP)
+client_socket.bind('tcp://*:1112')
+#!-----------Conexion con Client-------------
 
-#Bittorrent block = 250KB -> 250000B
-CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
+
+
+msg = 'server'
+server = {"server2":
+    {
+        "ip":"tcp://localhost:5555",
+        "storaged":"0",
+        "max_storage":"200",
+        "running":True,
+        "parts":
+        {}
+    }}
+jsserver = json.dumps(server)
+
+msgencoded = msg.encode('utf-8')
+serverencoded = jsserver.encode('utf-8')
+proxy_socket.send_multipart([msgencoded,serverencoded])
+response = proxy_socket.recv_multipart()
+print(response[0])
+print('[SERV2]: Esperando Clientes...')
+
+
+while True:
+    request = client_socket.recv_multipart()
+    requestdecoded = request[0].decode('utf-8')
+    print(requestdecoded+' guardada')
+    
+    response = 'recibida y guardada'
+    msgencoded = msg.encode('utf-8')
+    client_socket.send_multipart([msgencoded])
+
 

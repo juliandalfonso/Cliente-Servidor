@@ -1,45 +1,16 @@
 {
-    "server1":
-    {
-        "ip":"tcp://localhost:5555",
-        "storaged":"70",
-        "max_storage":"200",
-        "parts":
-        {
-            "DASAADF23432FF1F1F2312F21":"0",
-            "DASAADF234F13V2F2F2312F21":"2",
-            "DASAADF234F1FV32112312F21":"3",
-            "DASV144123FF234F1F2312F21":"5",
-            "DASAADF234F412411F2312F21":"6"
-        }
+    "server1": {
+        "ip": "tcp://localhost:5555",
+        "storaged": "0",
+        "max_storage": "200",
+        "running": true,
+        "parts": {}
     },
-    
-    "server2":
-    {
-        "ip":"tcp://localhost:5555",
-        "storaged":"70",
-        "max_storage":"200",
-        "parts":
-        {
-            "DASAADF23432FF1F1F2312F21":"0",
-            "DASAADF234F13V2F2F2312F21":"2",
-            "DASAADF234F1FV32112312F21":"3",
-            "DASV144123FF234F1F2312F21":"5",
-            "DASAADF234F412411F2312F21":"6"
-        }
-    },
-    "server3":
-    {
-        "ip":"tcp://localhost:5555",
-        "storaged":"70",
-        "max_storage":"200",
-        "parts":
-        {
-            "DASAADF23432FF1F1F2312F21":"0",
-            "DASAADF234F13V2F2F2312F21":"2",
-            "DASAADF234F1FV32112312F21":"3",
-            "DASV144123FF234F1F2312F21":"5",
-            "DASAADF234F412411F2312F21":"6"
-        }
+    "server2": {
+        "ip": "tcp://localhost:5555",
+        "storaged": "0",
+        "max_storage": "200",
+        "running": true,
+        "parts": {}
     }
 }
