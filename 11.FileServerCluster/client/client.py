@@ -194,6 +194,7 @@ while True:
 
     #upload
     if selector == '1':
+        
         #abrimos el archivo en lectura binaria
         file = open(file_dir, "rb")
         readfile=file.read()
@@ -202,14 +203,32 @@ while True:
         file_size = sizeArchivo(file)
         #obtenemos el hash del archivo completo
         file_hash = getFileHash(readfile)
+        
+        sizeencoded = (str(file_size)).encode('utf-8')
+        hashencoded = file_hash.encode('utf-8')
+        socket.send_multipart([CLIENT,jsonencoded,sizeencoded,hashencoded])
+        response = socket.recv_multipart()
+        
+        directions = procesaJson(response[0])
+        
         #calculamos el porcentaje segun el peso del archivo y el chunksize
         porcentaje = (CHUNK_SIZE*100)/file_size
         contador = 0 #lleva la cuenta del porcentaje
-        
         #leemos solo el numero de bytes especificados en CHUNK_SIZE
         chunk = file.read(CHUNK_SIZE)
         chunkCounter = 0 #cuenta cuantas partes se envian al servidor
+        servercounter=0
         while chunk:
+            if servercounter<4:
+                ip=directions[str(servercounter)]
+                servercounter+=1
+            else:
+                servercounter=0
+            
+            #?-----------Conexion con Proxy-------------
+            temporal_socket = context.socket(zmq.REQ)
+            temporal_socket.connect(ip)
+            #?-----------Conexion con Proxy-------------
             
             #manejo de hashes
             #hasheamos solo el pedazo/chunk del archivo
@@ -222,17 +241,16 @@ while True:
             #caso en que el arvhivo solo sea un chunk
             elif file_size<=CHUNK_SIZE:
                 jsonHash = convertToJsonHash(file_hash,chunkCounter,file_hash).encode('utf-8')
-
             
             #enviamos la parte del archivo al server
-            socket.send_multipart([CLIENT,jsonencoded, chunk, jsonHash])
+            temporal_socket.send_multipart([jsonencoded, chunk, jsonHash])
             #leemos el siguiente chunk
             chunk = file.read(CHUNK_SIZE)
             #incrementamos contador de chunks
             chunkCounter +=1
             
             #recibimos la respuesta del server
-            mensaje = socket.recv_string()
+            mensaje = temporal_socket.recv_string()
             #si el usuario ya subio un archivo con ese nombre
             if mensaje=='archivoexiste':
                 print(f'{user} ya subio un archivo con el nombre {file_dir}')

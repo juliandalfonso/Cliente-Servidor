@@ -3,6 +3,7 @@
     #implementar lógica de cluster de servidores 
 #todo:--------------------------------------------------
 
+from typing import Counter
 import zmq # libreria sockets 
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
@@ -26,7 +27,6 @@ SERVER = {}
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DB y retorna su contenido
 def leeDB(file):
-    print(file)
     file = open(file, "r")
     data=file.read()
     DATABASE = json.loads(data)
@@ -144,7 +144,7 @@ def upload(json_dic,jsonHash, DATABASE, HASH_DATABASE):
             newlinkcopyjson={filename:{'link_copy':link}}
             #actualizamos la base de datos con el nuevo link_copy
             DATABASE[nombre].update(newlinkcopyjson)
-            actualizaDB('./DATABASE.json',DATABASE)
+            actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
         #caso en que nadie haya subido ese archivo antes
@@ -163,11 +163,11 @@ def upload(json_dic,jsonHash, DATABASE, HASH_DATABASE):
                 DATABASE[nombre][filename]['parts'].update(newjson)
             
             #actualizamos la base de datos DB
-            actualizaDB('./DATABASE.json',DATABASE)
+            actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             #creamos un nuevo diccionario para HASH_DATABASE.json y lo agregamos
             newdbhash ={jsonHash['hash']:filename}
             HASH_DATABASE.update(newdbhash)
-            actualizaDB('./HASH_DATABASE.json',HASH_DATABASE)
+            actualizaDB('../DATABASE/HASH_DATABASE.json',HASH_DATABASE)
             
             #enviamos la respuesta al cliente
             response = f'\nSe agregó el archivo:{filename} al usuario {nombre}\n'
@@ -190,7 +190,7 @@ def upload(json_dic,jsonHash, DATABASE, HASH_DATABASE):
             
             #actualizamos la base de datos con el nuevo usuario    
             DATABASE.update(newlinkcopyjson)
-            actualizaDB('./DATABASE.json',DATABASE)
+            actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             #enviamos la respuesta al cliente
             print('[SERV]archivo ya existe, puntero actualizado')
             socket.send_string('actualizapuntero')
@@ -200,11 +200,11 @@ def upload(json_dic,jsonHash, DATABASE, HASH_DATABASE):
             newuser = nuevoUsuario(jsonHash,json_dic, link)
             #actualizamos el nuevo usuario en la BD
             DATABASE.update(newuser)
-            actualizaDB('./DATABASE.json',DATABASE)
+            actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             #agregamos el hash a HASH_DATABASE
             newdbhash ={jsonHash['hash']:filename}
             HASH_DATABASE.update(newdbhash)
-            actualizaDB('./HASH_DATABASE.json',HASH_DATABASE)
+            actualizaDB('../DATABASE/HASH_DATABASE.json',HASH_DATABASE)
             #respondemos al cliente
             response = f'\nnuevo usuario {nombre} con archivo {filename}\n'
             socket.send_string(response)
@@ -231,6 +231,22 @@ def getPart(usuario,nombrearchivo,part,DATABASE):
     file.close()
     return data
 
+#calcula el numero de partes segun el tamano del archivo
+def numberOfPartssize(file_size):
+    count=CHUNK_SIZE
+    parts=0
+    for x in range(file_size):
+        if count<(file_size):
+            parts+=1
+            count+=CHUNK_SIZE
+        else:
+            parts+=1
+            count-=CHUNK_SIZE
+            break
+
+    print('partes: '+str(parts))
+    return parts
+    
 #funcion que devuelve el numero de partes de un archivo
 def numberOfParts(DATABASE, usuario, nombrearchivo):
     numberofparts=0 #iniciamos en cero partes
@@ -360,22 +376,31 @@ def client(mens):
     
     #caso en que el cliente haga upload
     if json_dic["tipo"] == 'upload':
-        #segunda parte del mensaje es el chunk
-        chunk = mens[2]
-        #la tercera parte es el jsonhash
-        jsonHash = procesaJson(mens[3])
+        file_size = mens[2].decode('utf-8')
+        file_hash = mens[3].decode('utf-8')
+        #todo:validar si el archivo ya fue subido
         
-        #revisamos si el archivo existe y si ya se encuentra en la BD del usuario
-        archivo_existe = checkFilename(json_dic, DATABASE)
-        #si el usuario intenta subir un archivo que ya subio antes con ese nombre
-        if archivo_existe and jsonHash['chunkCounter']==0:
-            socket.send_string('archivoexiste')
-        #si el archivo es nuevo y el nombre no esta repetido lo carga
-        else:
-            #guardamos el archivo en la base de datos
-            upload(json_dic,jsonHash,DATABASE, HASH_DATABASE)
-            #guardamos el archivo fisicamente
-            cargaChunks(chunk,jsonHash)
+        #todo: calcular el numero de partes
+        partsnumber = numberOfPartssize(int(file_size))
+        #todo: iterar de 0 al numero de partes para crear el json
+        directions={}
+        servercounter=0
+        for x in range(partsnumber):
+            #todo:crear funcion numberofservers()
+            # if servercounter<numberofservers():
+            if servercounter<4:
+                serv = 'server'+str(servercounter+1)
+                ipaddress=SERVERS_DATABASE[serv]['ip']
+                add = {x:ipaddress}
+                directions.update(add)
+                servercounter+=1
+            else:
+                servercounter=0
+            
+        print('[PROXY] Redireccionando cliente a servidores')
+        directionsjson = json.dumps(directions)
+        directionsenconded = directionsjson.encode('utf-8')
+        socket.send_multipart([directionsenconded])
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'sharelink':
@@ -414,7 +439,7 @@ def client(mens):
 #agrega un servidor a la BD de servers
 def nuevoServer(serverdata,SERVERS_DATABASE):
     SERVERS_DATABASE.update(serverdata)
-    actualizaDB('SERVERS_DATABASE.json', SERVERS_DATABASE)
+    actualizaDB('../DATABASE/SERVERS_DATABASE.json', SERVERS_DATABASE)
     
     
     
@@ -446,15 +471,15 @@ def server(serverdata, SERVERS_DATABASE):
         socket.send_multipart([msgencoded])
     
     # SERVERS_DATABASE.update(decodeddata)
-    # actualizaDB('./DATABASE.json',DATABASE)
+    # actualizaDB('../DATABASE/DATABASE.json',DATABASE)
     
     
 
 #?-----------------------------FUNCIONES-----------------------------------------
 
-DATABASE= leeDB('./DATABASE.json')
-HASH_DATABASE= leeDB('./HASH_DATABASE.json')
-SERVERS_DATABASE= leeDB('./SERVERS_DATABASE.json')
+DATABASE= leeDB('../DATABASE/DATABASE.json')
+HASH_DATABASE= leeDB('../DATABASE/HASH_DATABASE.json')
+SERVERS_DATABASE= leeDB('../DATABASE/SERVERS_DATABASE.json')
 
 #!-------------------Logica del SERVER -------------------------
 while True:
@@ -463,9 +488,9 @@ while True:
     msgdecoded = mens[0].decode('utf-8')
     
     #leemos las bases de datos
-    DATABASE= leeDB('./DATABASE.json')
-    HASH_DATABASE= leeDB('./HASH_DATABASE.json')
-    SERVERS_DATABASE= leeDB('./SERVERS_DATABASE.json')
+    DATABASE= leeDB('../DATABASE/DATABASE.json')
+    HASH_DATABASE= leeDB('../DATABASE/HASH_DATABASE.json')
+    SERVERS_DATABASE= leeDB('../DATABASE/SERVERS_DATABASE.json')
     
     if msgdecoded == 'client':
         client(mens)

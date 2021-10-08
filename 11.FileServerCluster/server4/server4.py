@@ -19,15 +19,15 @@ proxy_socket.connect('tcp://localhost:5555')
 #!-----------Conexion con Client-------------
 context = zmq.Context()
 client_socket = context.socket(zmq.REP)
-client_socket.bind('tcp://*:1112')
+client_socket.bind('tcp://*:1114')
 #!-----------Conexion con Client-------------
 
 
 
 msg = 'server'
-server = {"server2":
+server = {"server4":
     {
-        "ip":"tcp://localhost:1112",
+        "ip":"tcp://localhost:1114",
         "storaged":"0",
         "max_storage":"200",
         "running":True,
