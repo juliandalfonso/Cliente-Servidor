@@ -2,6 +2,12 @@
 
 Programa tipo "google Drive" que corre un servidor que escucha uno o varios clientes y almacena archivos.
 
+## Cluster de Servidores
+
+Se implementan varios servidores que guardan los archivos por partes, hay un proxy que es el que redirecciona el tráfico a los servidores, Presentan la siguiente arquitectura
+
+![](../Screenshots/11arquitecture.png)
+
 ## Chunks: partes de archivo
 
 El servidor recibe el archivo por partes para optimizar la memoria, al igual que la descarga del archivo también se hace por partes
@@ -23,19 +29,16 @@ esto permite que si un usuario va a subir un archivo que el servidor ya tiene, n
 
 ---
 
-Este programa se ejecuta corriendo dos archivos server.py  y client.py
+Este programa se ejecuta corriendo varios archivos
 
-Para correr el servidor ejecutamos
+- /Proxy/proxy.py
+- /server1/server1.py
+- /server2/server2.py
+- /server3/server3.py
+- /server4/server4.py
+- /client/client.py
 
-```console
-python server.py
-```
-
-Para correr el cliente ejecutamos
-
-```console
-python client.py
-```
+nota: Es importante ejecutar los archivos en ese mismo orden respectivamente
 
 ## Manejo de los archivos
 
