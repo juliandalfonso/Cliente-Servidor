@@ -378,8 +378,6 @@ def client(mens):
     if json_dic["tipo"] == 'upload':
         file_size = mens[2].decode('utf-8')
         file_hash = mens[3].decode('utf-8')
-        #todo:validar si el archivo ya fue subido
-        
         #todo: calcular el numero de partes
         partsnumber = numberOfPartssize(int(file_size))
         #todo: iterar de 0 al numero de partes para crear el json

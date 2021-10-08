@@ -198,7 +198,6 @@ while True:
         #abrimos el archivo en lectura binaria
         file = open(file_dir, "rb")
         readfile=file.read()
-        
         #calculamos el peso del archivo
         file_size = sizeArchivo(file)
         #obtenemos el hash del archivo completo
@@ -219,6 +218,7 @@ while True:
         chunkCounter = 0 #cuenta cuantas partes se envian al servidor
         servercounter=0
         while chunk:
+            #iteramos entre 4 servidores que hay
             if servercounter<4:
                 ip=directions[str(servercounter)]
                 servercounter+=1

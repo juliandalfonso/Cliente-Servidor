@@ -48,33 +48,18 @@ print('[SERV2]: Esperando Clientes...')
 CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
 #?-----------------------------FUNCIONES-----------------------------------------
-#lee el contenido de DATABASE.json y retorna su contenido
-def leeDATABASE():
-    file = open("../DATABASE/DATABASE.json", "r")
+#lee el contenido de DB y retorna su contenido
+def leeDB(file):
+    file = open(file, "r")
     data=file.read()
     DATABASE = json.loads(data)
     file.close()
     return DATABASE
 
-#lee el contenido de HASH_DATABASE.json y retorna su contenido
-def leeHASHDATABASE():
-    file = open("../DATABASE/HASH_DATABASE.json", "r")
-    data=file.read()
-    HASH_DATABASE = json.loads(data)
-    file.close()
-    return HASH_DATABASE
-    
-#sobreescribe el nuevo contenido en la BD DATABASE.json
-def actualizaDB():
-    file = open("../DATABASE/DATABASE.json", "w")
-    appendjson = json.dumps(DATABASE, indent=4)
-    file.write(appendjson)
-    file.close()
-
-#actualiza la base de datos de los hashes HASH_DATABASE.json
-def actualizaHASHDB():
-    file = open("../DATABASE/HASH_DATABASE.json", "w")
-    appendjson = json.dumps(HASH_DATABASE, indent=4)
+#sobreescribe el nuevo contenido en la BD ingresada
+def actualizaDB(file,DB):
+    file = open(file, "w")
+    appendjson = json.dumps(DB, indent=4)
     file.write(appendjson)
     file.close()
 
@@ -181,7 +166,7 @@ def upload(json_dic,jsonHash):
             newlinkcopyjson={filename:{'link_copy':link}}
             #actualizamos la base de datos con el nuevo link_copy
             DATABASE[nombre].update(newlinkcopyjson)
-            actualizaDB()
+            actualizaDB('../DATABASE/DATABASE.json', DATABASE)
             print('[SERV]archivo ya existe, puntero actualizado')
             client_socket.send_string('actualizapuntero')
         #caso en que nadie haya subido ese archivo antes
@@ -200,11 +185,14 @@ def upload(json_dic,jsonHash):
                 DATABASE[nombre][filename]['parts'].update(newjson)
             
             #actualizamos la base de datos DB
-            actualizaDB()
+            actualizaDB('../DATABASE/DATABASE.json', DATABASE)
             #creamos un nuevo diccionario para HASH_DATABASE.json y lo agregamos
             newdbhash ={jsonHash['hash']:filename}
+            #!UPDATE SERVERS_DATABASE
+            SERVERS_DATABASE['server2']['parts'].update(newdbhash)
+            actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
             HASH_DATABASE.update(newdbhash)
-            actualizaHASHDB()
+            actualizaDB('../DATABASE/HASH_DATABASE.json',HASH_DATABASE)
             
             #enviamos la respuesta al cliente
             response = f'\nSe agregó el archivo:{filename} al usuario {nombre}\n'
@@ -227,7 +215,7 @@ def upload(json_dic,jsonHash):
             
             #actualizamos la base de datos con el nuevo usuario    
             DATABASE.update(newlinkcopyjson)
-            actualizaDB()
+            actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             #enviamos la respuesta al cliente
             print('[SERV]archivo ya existe, puntero actualizado')
             client_socket.send_string('actualizapuntero')
@@ -237,11 +225,14 @@ def upload(json_dic,jsonHash):
             newuser = nuevoUsuario(json_dic, link)
             #actualizamos el nuevo usuario en la BD
             DATABASE.update(newuser)
-            actualizaDB()
+            actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             #agregamos el hash a HASH_DATABASE
             newdbhash ={jsonHash['hash']:filename}
+            #!UPDATE SERVERS_DATABASE
+            SERVERS_DATABASE['server2']['parts'].update(newdbhash)
+            actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
             HASH_DATABASE.update(newdbhash)
-            actualizaHASHDB()
+            actualizaDB('../DATABASE/HASH_DATABASE.json',HASH_DATABASE)
             #respondemos al cliente
             response = f'\nnuevo usuario {nombre} con archivo {filename}\n'
             client_socket.send_string(response)
@@ -393,6 +384,12 @@ def cargaChunks(archivo, jsonHash):
     
 #?-----------------------------FUNCIONES-----------------------------------------
 
+#cargamos la base de datos en DATABASE
+DATABASE= leeDB('../DATABASE/DATABASE.json')
+#cargamos la base de datos de hashes en HASH_DATABASE
+HASH_DATABASE= leeDB('../DATABASE/HASH_DATABASE.json')
+#cargamos la base de datos de hashes en HASH_DATABASE
+SERVERS_DATABASE= leeDB('../DATABASE/SERVERS_DATABASE.json')
 
 
 #!-------------------Logica del SERVER -------------------------
@@ -400,9 +397,11 @@ while True:
     #Recibimos un multipart del cliente
     mens = client_socket.recv_multipart()
     #cargamos la base de datos en DATABASE
-    DATABASE= leeDATABASE()
+    DATABASE= leeDB('../DATABASE/DATABASE.json')
     #cargamos la base de datos de hashes en HASH_DATABASE
-    HASH_DATABASE= leeHASHDATABASE()
+    HASH_DATABASE= leeDB('../DATABASE/HASH_DATABASE.json')
+    #cargamos la base de datos de hashes en SERVERS_DATABASE
+    SERVERS_DATABASE= leeDB('../DATABASE/SERVERS_DATABASE.json')
     #primera parte del mensaje
     json_dic = procesaJson(mens[0])
     
