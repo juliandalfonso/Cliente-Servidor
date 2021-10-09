@@ -394,11 +394,12 @@ def client(mens):
                 servercounter+=1
             else:
                 servercounter=0
-            
+              
         print('[PROXY] Redireccionando cliente a servidores')
         directionsjson = json.dumps(directions)
         directionsenconded = directionsjson.encode('utf-8')
         socket.send_multipart([directionsenconded])
+        
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'sharelink':
