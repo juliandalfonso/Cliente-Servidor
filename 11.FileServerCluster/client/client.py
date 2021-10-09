@@ -216,7 +216,6 @@ while True:
         response = socket.recv_multipart()
         
         directions = procesaJson(response[0])
-        
         #calculamos el porcentaje segun el peso del archivo y el chunksize
         porcentaje = (CHUNK_SIZE*100)/file_size
         contador = 0 #lleva la cuenta del porcentaje
@@ -226,14 +225,15 @@ while True:
         servercounter=0
         while chunk:
             #iteramos entre 4 servidores que hay
-            if servercounter<4:
+            """ if servercounter<=4:
                 ip=directions[str(servercounter)]
                 servercounter+=1
             else:
                 ip=directions[str(servercounter)]
-                servercounter=0
-            
+                servercounter=0 """
+            ip=directions[str(servercounter)]
             print(ip)
+            servercounter+=1
             #?-----------Conexion con Proxy-------------
             temporal_socket = context.socket(zmq.REQ)
             temporal_socket.connect(ip)
