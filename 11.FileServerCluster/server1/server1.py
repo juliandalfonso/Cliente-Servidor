@@ -80,6 +80,7 @@ def nuevoUsuario(json_dic, link):
                   'parts':{
                       jsonHash['chunkCounter']:jsonHash['hash']
                   },
+                  'directions':{},
                   'link' : link,
                   }}}
     return newuser
@@ -90,6 +91,7 @@ def nuevoDict(json_dic, link):
     newdic =  {
               filename : {
                   'parts':{},
+                  'directions':{},
                   'link' : link,
               }}
     return newdic
@@ -147,7 +149,7 @@ def actualizapuntero(jsonHash, HASH_DATABASE, DATABASE):
     return filename, link
 
 #actualizamos la DATABASE.json con el nuevo archivo
-def upload(json_dic,jsonHash):
+def upload(json_dic,jsonHash,directions):
 
     #cargamos el usuario y el archivo 
     nombre = json_dic["usuario"]
@@ -187,6 +189,8 @@ def upload(json_dic,jsonHash):
                 newjson = nuevoHash(jsonHash)
                 DATABASE[nombre][filename]['parts'].update(newjson)
             
+            #!agregamos directions
+            DATABASE[nombre][filename]['directions'].update(directions)
             #actualizamos la base de datos DB
             actualizaDB('../DATABASE/DATABASE.json', DATABASE)
             #creamos un nuevo diccionario para HASH_DATABASE.json y lo agregamos
@@ -228,6 +232,8 @@ def upload(json_dic,jsonHash):
             newuser = nuevoUsuario(json_dic, link)
             #actualizamos el nuevo usuario en la BD
             DATABASE.update(newuser)
+            #!agregamos directions
+            DATABASE[nombre][filename]['directions'].update(directions)
             actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             #agregamos el hash a HASH_DATABASE
             newdbhash ={jsonHash['hash']:filename}
@@ -423,8 +429,9 @@ while True:
             client_socket.send_string('archivoexiste')
         #si el archivo es nuevo y el nombre no esta repetido lo carga
         else:
+            directions = procesaJson(mens[3])
             #guardamos el archivo en la base de datos
-            upload(json_dic,jsonHash)
+            upload(json_dic,jsonHash,directions)
             #guardamos el archivo fisicamente
             cargaChunks(chunk,jsonHash)
     

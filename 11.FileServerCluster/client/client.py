@@ -243,7 +243,7 @@ while True:
                 jsonHash = convertToJsonHash(file_hash,chunkCounter,file_hash).encode('utf-8')
             
             #enviamos la parte del archivo al server
-            temporal_socket.send_multipart([jsonencoded, chunk, jsonHash])
+            temporal_socket.send_multipart([jsonencoded, chunk, jsonHash, response[0]])
             #leemos el siguiente chunk
             chunk = file.read(CHUNK_SIZE)
             #incrementamos contador de chunks

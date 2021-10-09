@@ -394,7 +394,6 @@ def client(mens):
                 servercounter+=1
             else:
                 servercounter=0
-              
         print('[PROXY] Redireccionando cliente a servidores')
         directionsjson = json.dumps(directions)
         directionsenconded = directionsjson.encode('utf-8')
