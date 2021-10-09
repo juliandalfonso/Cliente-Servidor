@@ -382,24 +382,25 @@ def client(mens):
         partsnumber = numberOfPartssize(int(file_size))
         #todo: iterar de 0 al numero de partes para crear el json
         directions={}
-        servercounter=0
+        servercounter=1
         parts=0
         for x in range(partsnumber):
             #todo:crear funcion numberofservers()
             # if servercounter<numberofservers():
-            if servercounter<4:
-                serv = 'server'+str(servercounter+1)
+            if servercounter<=4:
+                serv = 'server'+str(servercounter)
                 ipaddress=SERVERS_DATABASE[serv]['ip']
                 add = {parts:ipaddress}
                 directions.update(add)
                 servercounter+=1
             else:
+                servercounter=1
                 print(parts)
-                servercounter=0
-                serv = 'server'+str(servercounter+1)
+                serv = 'server'+str(servercounter)
                 ipaddress=SERVERS_DATABASE[serv]['ip']
                 add = {parts:ipaddress}
                 directions.update(add)
+                servercounter+=1
             parts+=1
 
         print('[PROXY] Redireccionando cliente a servidores')
