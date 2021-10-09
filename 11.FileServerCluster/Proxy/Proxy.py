@@ -244,7 +244,6 @@ def numberOfPartssize(file_size):
             count-=CHUNK_SIZE
             break
 
-    print('partes: '+str(parts))
     return parts
     
 #funcion que devuelve el numero de partes de un archivo
@@ -279,6 +278,9 @@ def download(DATABASE,dllink,part):
     
     #en caso de encontrar el archivo con el link
     if encontrado:
+        directionsdic = DATABASE[usuario][nombrearchivo]['directions']
+        directions = json.dumps(directionsdic).encode('utf-8')
+        
         #guardamos el numero de partes que contiene el archivo para enviarlo
         numberofparts = numberOfParts(DATABASE,usuario, nombrearchivo)
         #cramos el json respuesta
@@ -291,10 +293,8 @@ def download(DATABASE,dllink,part):
             }
         )
         json_response_encoded = json_response.encode('utf-8')
-        #obtenemos la parte del archivo solicitada
-        filePart = getPart(usuario,nombrearchivo, part,DATABASE)
         #enviamos la respuesta con la parte del archivo al cliente
-        socket.send_multipart([json_response_encoded,filePart])
+        socket.send_multipart([json_response_encoded,directions])
     
     #en caso de no haber encontrado el link
     else:
@@ -383,17 +383,25 @@ def client(mens):
         #todo: iterar de 0 al numero de partes para crear el json
         directions={}
         servercounter=0
+        parts=0
         for x in range(partsnumber):
             #todo:crear funcion numberofservers()
             # if servercounter<numberofservers():
             if servercounter<4:
                 serv = 'server'+str(servercounter+1)
                 ipaddress=SERVERS_DATABASE[serv]['ip']
-                add = {x:ipaddress}
+                add = {parts:ipaddress}
                 directions.update(add)
                 servercounter+=1
             else:
+                print(parts)
                 servercounter=0
+                serv = 'server'+str(servercounter+1)
+                ipaddress=SERVERS_DATABASE[serv]['ip']
+                add = {parts:ipaddress}
+                directions.update(add)
+            parts+=1
+
         print('[PROXY] Redireccionando cliente a servidores')
         directionsjson = json.dumps(directions)
         directionsenconded = directionsjson.encode('utf-8')

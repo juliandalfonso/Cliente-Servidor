@@ -46,7 +46,7 @@ def procesaJson(mensjson):
     return finaljson
 
 #descarga un documento por chunks
-def downloadFile(user,file_dir,response, archivo):
+def downloadFile(user,file_dir,response, archivo,directions):
     #crea un directorio con el nombre del usuario y el archivo
     # /files/usuario/archivo.txt
     newfilepath = './Clientfiles/'+user+'/'+file_dir
@@ -63,8 +63,15 @@ def downloadFile(user,file_dir,response, archivo):
     file = open(newfilepath, "ab")
     file.write(archivo)
 
+
     #hasta que el puntero lee todas las partes o hashes   
     while counterofparts < numberofparts:
+        ip=directions[str(counterofparts)]
+        
+        #?-----------Conexion con Proxy-------------
+        temp_socket = context.socket(zmq.REQ)
+        temp_socket.connect(ip)
+        #?-----------Conexion con Proxy-------------
         
         #imprimimos el porcentaje de descarga
         porcentaje = (counterofparts*100)/(numberofparts-1)
@@ -76,9 +83,9 @@ def downloadFile(user,file_dir,response, archivo):
         partencoded = partjson.encode('utf-8')
         
         #solicitamos la parte al server
-        socket.send_multipart([CLIENT,jsonencoded, partencoded])
+        temp_socket.send_multipart([jsonencoded, partencoded])
         #recibimos la respuesta del server
-        mens,archivo_respuesta = socket.recv_multipart()
+        mens,archivo_respuesta = temp_socket.recv_multipart()
         
         #guardamos la nueva parte del archivo e iteramos nuevamente
         archivo = archivo_respuesta
@@ -223,8 +230,10 @@ while True:
                 ip=directions[str(servercounter)]
                 servercounter+=1
             else:
+                ip=directions[str(servercounter)]
                 servercounter=0
             
+            print(ip)
             #?-----------Conexion con Proxy-------------
             temporal_socket = context.socket(zmq.REQ)
             temporal_socket.connect(ip)
@@ -291,15 +300,27 @@ while True:
         #lo codificamos para enviarlo
         partencoded = partjson.encode('utf-8')
         socket.send_multipart([CLIENT,jsonencoded,partencoded])
-        
+
         #recibimos la respuesta del server con la primera parte a descargar
         mens = socket.recv_multipart()
+        
         response = procesaJson(mens[0])
         
         #en caso de que el servidor haya encontrado el archivo lo descarga
         if response["encontrado"]:
+            directions = procesaJson(mens[1])
+            ip = directions['0']
+            print(ip)
+            #?-----------Conexion con Proxy-------------
+            temporal_socket = context.socket(zmq.REQ)
+            temporal_socket.connect(ip)
+            #?-----------Conexion con Proxy-------------
             file_dir = response["filename"]
-            downloadFile(user,file_dir,response, mens[1])
+            #!solicitud temporal de descarga
+            temporal_socket.send_multipart([jsonencoded,partencoded])
+            mens = temporal_socket.recv_multipart()
+            response = procesaJson(mens[0])
+            downloadFile(user,file_dir,response,mens[1], directions)
         #cuando el archivo no fue encontrado o el link es invalido
         else:
             print(response["response"])
