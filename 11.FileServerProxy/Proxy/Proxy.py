@@ -1,16 +1,11 @@
 
 #todo:--------------------------------------------------
-    #implementar lógica de cluster de servidores 
+    #documentacion 
 #todo:--------------------------------------------------
 
-from typing import Counter
 import zmq # libreria sockets 
 import json #diccionario python a json 
 import uuid #unique-id -> encuentra identificador unico
-import os #para crear las nuevas carpetas y checkear su existencia
-import time
-
-from zmq.sugar import socket #libreria para usar time.sleep() mas que todo para hacer pruebas
 
 
 #!-------Conexion con CLIENTS Y SERVERS -------------
@@ -21,8 +16,6 @@ socket.bind('tcp://*:5555')
 
 #Bittorrent block = 250KB -> 250000B
 CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
-
-SERVER = {}
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DB y retorna su contenido
@@ -211,25 +204,6 @@ def upload(json_dic,jsonHash, DATABASE, HASH_DATABASE):
             print('[SERV] usuario y carpeta creados y archivo agregado')
 
 
-#funcion que devuelve la parte solicitada de un archivo
-def getPart(usuario,nombrearchivo,part,DATABASE):
-    hash_solicitado=''#aqui guardamos el hash que de la parte solicitada
-    for nombres, archivossubidos in DATABASE.items():
-        for archivo, contenido in archivossubidos.items():
-            for partolink, parts in contenido.items():
-                if partolink == 'parts':
-                    for hashnumber,file_hash in parts.items():
-                        if usuario == nombres and nombrearchivo==archivo:
-                            if int(hashnumber)==int(part):
-                                hash_solicitado = file_hash
-    
-    #encontramos la parte del archivo que fue solicitada           
-    newfilepath = './Serverfiles/'+hash_solicitado
-    #abrimos el archivo en lectura binaria y retornamos su data
-    file = open(newfilepath, "rb")
-    data = file.read()
-    file.close()
-    return data
 
 #calcula el numero de partes segun el tamano del archivo
 def numberOfPartssize(file_size):
@@ -246,7 +220,7 @@ def numberOfPartssize(file_size):
 
     return parts
     
-#funcion que devuelve el numero de partes de un archivo
+#funcion que devuelve el numero de partes de un archivo contando los items en 'parts' DATABASE
 def numberOfParts(DATABASE, usuario, nombrearchivo):
     numberofparts=0 #iniciamos en cero partes
     
@@ -358,18 +332,11 @@ def listadorArchivosUsuario(json_dic,DATABASE):
     else:
         print('[SERV] Usuario no encontrado')
         socket.send_string('Usuario no encontrado')
+        
+        
 
-#recibe chunks (el archivo por partes) y los va guardando a medida que los recibe            
-def cargaChunks(archivo, jsonHash):
-    #crea un directorio con el nombre del usuario y el archivo
-    # /files/usuario/archivo.txt
-    newfilepath = './Serverfiles/'+ jsonHash['hash']
-    #si existe la carpeta del usuario la sobre escribe, sino la crea
-    os.makedirs(os.path.dirname(newfilepath), exist_ok=True)
-    file = open(newfilepath, "ab")
-    file.write(archivo)
-    file.close()
-    
+
+#en caso de que el que solicite sea el cliente
 def client(mens):
     #primera parte del mensaje
     json_dic = procesaJson(mens[1])
@@ -386,8 +353,8 @@ def client(mens):
         parts=0
         for x in range(partsnumber):
             #todo:crear funcion numberofservers()
-            # if servercounter<numberofservers():
-            if servercounter<=4:
+            
+            if servercounter<=len(SERVERS_DATABASE):
                 serv = 'server'+str(servercounter)
                 ipaddress=SERVERS_DATABASE[serv]['ip']
                 add = {parts:ipaddress}
@@ -443,7 +410,7 @@ def client(mens):
         download(DATABASE, dllink, part)
 
 
-#agrega un servidor a la BD de servers
+#recibe la informacion del servidor y lo guarda en 
 def nuevoServer(serverdata,SERVERS_DATABASE):
     SERVERS_DATABASE.update(serverdata)
     actualizaDB('../DATABASE/SERVERS_DATABASE.json', SERVERS_DATABASE)
@@ -499,8 +466,11 @@ while True:
     HASH_DATABASE= leeDB('../DATABASE/HASH_DATABASE.json')
     SERVERS_DATABASE= leeDB('../DATABASE/SERVERS_DATABASE.json')
     
+    #caso en que la peticion sea de un cliente
     if msgdecoded == 'client':
         client(mens)
+    
+    #caso en que la peticion sea de un servidor
     if msgdecoded == 'server':
 
         serverdata = procesaJson(mens[1])        

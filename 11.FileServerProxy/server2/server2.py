@@ -23,9 +23,14 @@ client_socket.bind('tcp://*:1112')
 #!-----------Conexion con Client-------------
 
 
+#Bittorrent block = 250KB -> 250000B
+CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
+SERVER='server2'
+
+#!-----comunicacion con proxy inicial---------------------
 msg = 'server'
-server = {"server2":
+server = {SERVER:
     {
         "ip":"tcp://localhost:1112",
         "storaged":"0",
@@ -42,10 +47,9 @@ proxy_socket.send_multipart([msgencoded,serverencoded])
 response = proxy_socket.recv_multipart()
 print(response[0])
 print('[SERV2]: Esperando Clientes...')
+#!-----comunicacion con proxy inicial---------------------
 
 
-#Bittorrent block = 250KB -> 250000B
-CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DB y retorna su contenido
@@ -77,6 +81,7 @@ def nuevoUsuario(json_dic, link):
                   'parts':{
                       jsonHash['chunkCounter']:jsonHash['hash']
                   },
+                  'directions':{},
                   'link' : link,
                   }}}
     return newuser
@@ -87,6 +92,7 @@ def nuevoDict(json_dic, link):
     newdic =  {
               filename : {
                   'parts':{},
+                  'directions':{},
                   'link' : link,
               }}
     return newdic
@@ -144,7 +150,7 @@ def actualizapuntero(jsonHash, HASH_DATABASE, DATABASE):
     return filename, link
 
 #actualizamos la DATABASE.json con el nuevo archivo
-def upload(json_dic,jsonHash):
+def upload(json_dic,jsonHash,directions):
 
     #cargamos el usuario y el archivo 
     nombre = json_dic["usuario"]
@@ -184,12 +190,14 @@ def upload(json_dic,jsonHash):
                 newjson = nuevoHash(jsonHash)
                 DATABASE[nombre][filename]['parts'].update(newjson)
             
+            #!agregamos directions
+            DATABASE[nombre][filename]['directions'].update(directions)
             #actualizamos la base de datos DB
             actualizaDB('../DATABASE/DATABASE.json', DATABASE)
             #creamos un nuevo diccionario para HASH_DATABASE.json y lo agregamos
             newdbhash ={jsonHash['hash']:filename}
             #!UPDATE SERVERS_DATABASE
-            SERVERS_DATABASE['server2']['parts'].update(newdbhash)
+            SERVERS_DATABASE[SERVER]['parts'].update(newdbhash)
             actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
             HASH_DATABASE.update(newdbhash)
             actualizaDB('../DATABASE/HASH_DATABASE.json',HASH_DATABASE)
@@ -225,12 +233,15 @@ def upload(json_dic,jsonHash):
             newuser = nuevoUsuario(json_dic, link)
             #actualizamos el nuevo usuario en la BD
             DATABASE.update(newuser)
+            #!agregamos directions
+            DATABASE[nombre][filename]['directions'].update(directions)
             actualizaDB('../DATABASE/DATABASE.json',DATABASE)
             #agregamos el hash a HASH_DATABASE
             newdbhash ={jsonHash['hash']:filename}
             #!UPDATE SERVERS_DATABASE
-            SERVERS_DATABASE['server2']['parts'].update(newdbhash)
+            SERVERS_DATABASE[SERVER]['parts'].update(newdbhash)
             actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
+            
             HASH_DATABASE.update(newdbhash)
             actualizaDB('../DATABASE/HASH_DATABASE.json',HASH_DATABASE)
             #respondemos al cliente
@@ -382,6 +393,15 @@ def cargaChunks(archivo, jsonHash):
     file.write(archivo)
     file.close()
     
+
+def sumaStoraged(SERVERS_DATABASE):
+    storaged =int(SERVERS_DATABASE[SERVER]['storaged'])
+    storaged+=1
+    SERVERS_DATABASE[SERVER]['storaged']=storaged
+    actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
+    
+    
+    
 #?-----------------------------FUNCIONES-----------------------------------------
 
 #cargamos la base de datos en DATABASE
@@ -419,10 +439,13 @@ while True:
             client_socket.send_string('archivoexiste')
         #si el archivo es nuevo y el nombre no esta repetido lo carga
         else:
+            directions = procesaJson(mens[3])
             #guardamos el archivo en la base de datos
-            upload(json_dic,jsonHash)
+            upload(json_dic,jsonHash,directions)
             #guardamos el archivo fisicamente
             cargaChunks(chunk,jsonHash)
+            #!suma +1 en storaged cada vez que se una parte al servidor
+            sumaStoraged(SERVERS_DATABASE)
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'sharelink':

@@ -23,9 +23,14 @@ client_socket.bind('tcp://*:1111')
 #!-----------Conexion con Client-------------
 
 
+#Bittorrent block = 250KB -> 250000B
+CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
+
+SERVER='server1'
+
 #!-----comunicacion con proxy inicial---------------------
 msg = 'server'
-server = {"server1":
+server = {SERVER:
     {
         "ip":"tcp://localhost:1111",
         "storaged":"0",
@@ -45,10 +50,6 @@ print('[SERV1]: Esperando Clientes...')
 #!-----comunicacion con proxy inicial---------------------
 
 
-
-
-#Bittorrent block = 250KB -> 250000B
-CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
 #?-----------------------------FUNCIONES-----------------------------------------
 #lee el contenido de DB y retorna su contenido
@@ -196,7 +197,7 @@ def upload(json_dic,jsonHash,directions):
             #creamos un nuevo diccionario para HASH_DATABASE.json y lo agregamos
             newdbhash ={jsonHash['hash']:filename}
             #!UPDATE SERVERS_DATABASE
-            SERVERS_DATABASE['server1']['parts'].update(newdbhash)
+            SERVERS_DATABASE[SERVER]['parts'].update(newdbhash)
             actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
             HASH_DATABASE.update(newdbhash)
             actualizaDB('../DATABASE/HASH_DATABASE.json',HASH_DATABASE)
@@ -238,7 +239,7 @@ def upload(json_dic,jsonHash,directions):
             #agregamos el hash a HASH_DATABASE
             newdbhash ={jsonHash['hash']:filename}
             #!UPDATE SERVERS_DATABASE
-            SERVERS_DATABASE['server1']['parts'].update(newdbhash)
+            SERVERS_DATABASE[SERVER]['parts'].update(newdbhash)
             actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
             
             HASH_DATABASE.update(newdbhash)
@@ -392,6 +393,15 @@ def cargaChunks(archivo, jsonHash):
     file.write(archivo)
     file.close()
     
+
+def sumaStoraged(SERVERS_DATABASE):
+    storaged =int(SERVERS_DATABASE[SERVER]['storaged'])
+    storaged+=1
+    SERVERS_DATABASE[SERVER]['storaged']=storaged
+    actualizaDB('../DATABASE/SERVERS_DATABASE.json',SERVERS_DATABASE)
+    
+    
+    
 #?-----------------------------FUNCIONES-----------------------------------------
 
 #cargamos la base de datos en DATABASE
@@ -434,6 +444,8 @@ while True:
             upload(json_dic,jsonHash,directions)
             #guardamos el archivo fisicamente
             cargaChunks(chunk,jsonHash)
+            #!suma +1 en storaged cada vez que se una parte al servidor
+            sumaStoraged(SERVERS_DATABASE)
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'sharelink':
