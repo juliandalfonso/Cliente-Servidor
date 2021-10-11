@@ -22,18 +22,17 @@ client_socket = context.socket(zmq.REP)
 client_socket.bind('tcp://*:1114')
 #!-----------Conexion con Client-------------
 
-
-
 #Bittorrent block = 250KB -> 250000B
 CHUNK_SIZE = 250000 #establecemos una constante de particion de archivos en memoria
 
+#constante que determina el nombre del servidor 
 SERVER='server4'
 
 #!-----comunicacion con proxy inicial---------------------
 msg = 'server'
 server = {SERVER:
     {
-        "ip":"tcp://localhost:1114",
+        "ip":"tcp://localhost:1111",
         "storaged":"0",
         "max_storage":"200",
         "running":True,
@@ -333,55 +332,6 @@ def download(DATABASE,dllink,part):
         client_socket.send_multipart([json_response_encoded])
         print('[SERV] link no encontrado descarga no exitosa')
 
-#SHARELINK -> verifica que el archivo exista y devuelve el link de descarga
-def shareLink(json_dic, DATABASE):
-    linkshare=''
-    nombreacompartir = json_dic["usuario"]
-    archivoacompartir = json_dic["filename"]
-    #iteramos para encontrar el link
-    for nombres, archivos in DATABASE.items():
-        for filename, values in archivos.items():
-            for claves, link in values.items():
-                #comparamos el usuario y el archivo solicitado con el usuario encontrado y el archivo encontrado
-                if nombreacompartir == nombres and archivoacompartir == filename:
-                    if claves=='link' or claves=='link_copy':
-                        linkshare = link
-    return linkshare
-
-#lista los archivos de la base de datos y los envia al cliente
-def listadorArchivos(DATABASE):
-    #encontramos todos los archivos en DATABASE y los organiza en un string
-    lista ='Todos los archivos: \n'
-    for nombres, archivos in DATABASE.items():
-        lista += nombres+':\n'
-        for filename, values in archivos.items():
-            lista += '      -'+filename + '\n'
-    #envia los archivos existentes en el server como string al cliente
-    client_socket.send_string(lista)
-    print('[SERV] enviada lista de archivos')
-
-#lista los archivos de un usuario en especifico y los envia al cliente
-def listadorArchivosUsuario(json_dic,DATABASE):
-    usuario = json_dic["usuario"]
-    lista = f'archivos de {usuario}: \n'
-    encontrado = False
-    #iteramos por todos los archivos hasta encontrar el usuario
-    for nombres, archivos in DATABASE.items():
-        if usuario == nombres:
-            lista += nombres+':\n'
-            encontrado = True
-        for filename, values in archivos.items():
-            if usuario == nombres:
-                # guardamos los archivos que ha subido
-                lista += '      -'+filename + '\n'
-    #en caso de encontrar el usuario
-    if encontrado:
-        print('[SERV] enviando archivos al cliente ')
-        client_socket.send_string(lista)
-    #caso de no encontrar el usuario
-    else:
-        print('[SERV] Usuario no encontrado')
-        client_socket.send_string('Usuario no encontrado')
 
 #recibe chunks (el archivo por partes) y los va guardando a medida que los recibe            
 def cargaChunks(archivo, jsonHash):
@@ -405,12 +355,7 @@ def sumaStoraged(SERVERS_DATABASE):
     
 #?-----------------------------FUNCIONES-----------------------------------------
 
-#cargamos la base de datos en DATABASE
-DATABASE= leeDB('../DATABASE/DATABASE.json')
-#cargamos la base de datos de hashes en HASH_DATABASE
-HASH_DATABASE= leeDB('../DATABASE/HASH_DATABASE.json')
-#cargamos la base de datos de hashes en HASH_DATABASE
-SERVERS_DATABASE= leeDB('../DATABASE/SERVERS_DATABASE.json')
+
 
 
 #!-------------------Logica del SERVER -------------------------
@@ -448,27 +393,6 @@ while True:
             #!suma +1 en storaged cada vez que se una parte al servidor
             sumaStoraged(SERVERS_DATABASE)
     
-    #caso que el cliente solicite una descarga
-    if json_dic["tipo"] == 'sharelink':
-        #revisamos que el arvhivo exista
-        if checkFilename(json_dic, DATABASE):
-            #guardamos el link en linkshare
-            linkshare = shareLink(json_dic, DATABASE)
-            client_socket.send_string(f'\nlink para descargar {json_dic["filename"]} es: \n    {linkshare}\n')
-            print('[SERV] link compartido')
-        #si el archivo no existe o no se encuentra
-        else:
-            client_socket.send_string('archivo no encontrado')
-            print('[SERV] archivo no encontrado')
-    
-    #caso que el cliente solicite la lista de los archivos
-    if json_dic["tipo"] == 'list':
-        #si solicito todos los archivos
-        if json_dic["filename"] == 'todo':
-            listadorArchivos(DATABASE)
-        #si solicito un usuario en especifico
-        else:
-            listadorArchivosUsuario(json_dic, DATABASE)
     
     #caso que el cliente solicite una descarga
     if json_dic["tipo"] == 'downloadlink':
