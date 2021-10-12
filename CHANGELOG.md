@@ -2,19 +2,14 @@
 
 este archivo contiene el control de versiones con la logica de [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) para llevar registro del codigo de forma ordenada
 
-## v1.1.0 - Oct. 05, 2015
+## v1.2.0 - Oct. 05, 2015
 
-Initial release.
+**Added**
 
-**Added:**
-- server 4
-- carpeta DATABASE
-- carpeta client
-
-**Function:**
-- funcionando FileServerCluster 100%
-
-**Docs**
-- Falta documentación y organizar el código
+- Programa FileServerProxy funcionando correctamente
+- Servidores se añaden dinamicamente
+- falta manejo de almacenamiento en servidores
+    - Los archivos se guardan en orden de servidores, no es lo más óptimo, no se tiene en cuenta el almacenamiento de cada servidor(unos servidores pueden tener más almacenamiento que otros)
+- Falta un poco de documentación y borrar lineas de código de sobra en los servidores
 
 

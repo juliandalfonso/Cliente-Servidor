@@ -362,14 +362,14 @@ def client(mens):
                 servercounter+=1
             else:
                 servercounter=1
-                print(parts)
+                
                 serv = 'server'+str(servercounter)
                 ipaddress=SERVERS_DATABASE[serv]['ip']
                 add = {parts:ipaddress}
                 directions.update(add)
                 servercounter+=1
             parts+=1
-
+        
         print('[PROXY] Redireccionando cliente a servidores')
         directionsjson = json.dumps(directions)
         directionsenconded = directionsjson.encode('utf-8')

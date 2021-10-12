@@ -54,4 +54,4 @@ al descargar un archivo del servidor, se crea una carpeta Clientfiles donde se g
 
 ![](../Screenshots/10_MenuCliente2.png)
 
-![](../Screenshots/10_DATABASE.png)
+

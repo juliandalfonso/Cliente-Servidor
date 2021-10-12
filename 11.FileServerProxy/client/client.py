@@ -66,8 +66,10 @@ def downloadFile(user,file_dir,response, archivo,directions):
 
     #hasta que el puntero lee todas las partes o hashes   
     while counterofparts < numberofparts:
+        #guardamos la direccion ip del servidor donde se encuentra guardada la parte solicitada
         ip=directions[str(counterofparts)]
         
+        #creamos una conexion temporal con el servidor que corresponde
         #?-----------Conexion con Proxy-------------
         temp_socket = context.socket(zmq.REQ)
         temp_socket.connect(ip)
@@ -104,7 +106,7 @@ def downloadFile(user,file_dir,response, archivo,directions):
 
 #logica del menú para mejor experiencia de usuario
 def menuDatos():
-
+    #borramos la pantalla para mejor interfaz
     os.system('cls||clear')
     print('1.Upload\n2.Sharelink\n3.List\n4.Download\n5.Salir\n')
     print('Seleccione una opcion: ')
@@ -163,13 +165,16 @@ def menuDatos():
 
 #Recibe un archivo y retorna su tamaño
 def sizeArchivo(file):
-    # Dice el tamano del archivo
+    # Recorre el archivo de comienzo a fin contando byte a byte 
     file.seek(0, os.SEEK_END)
     print("Size of file is :", file.tell(), "bytes")
     size = file.tell()
     file.seek(0, os.SEEK_SET)
+    
+    #retorna el tamano en bytes del archivo
     return size
 
+#creamos un nuevo json con las caracteristicas del hash
 def convertToJsonHash(chunkHash,chunkCounter,file_hash):
     crearJson = json.dumps(#json.dumps convierte dict a json
         {
@@ -180,7 +185,7 @@ def convertToJsonHash(chunkHash,chunkCounter,file_hash):
     )
     return crearJson
 
-#recibe el archivo y retorna su hash
+#recibe el archivo y retorna su hash (sha1)
 def getFileHash(file):
     sha1Hash = hashlib.sha1(file)
     sha1Hashed = sha1Hash.hexdigest()
@@ -192,6 +197,7 @@ def getFileHash(file):
 #!-------------------Logica del CLIENT -------------------------
 while True:
 
+    #corremos el menu y almacenamos los datos
     selector, user,tipo,file_dir = menuDatos()
     
     #creamos un json con la informacion que suministra el usuario
@@ -224,13 +230,7 @@ while True:
         chunkCounter = 0 #cuenta cuantas partes se envian al servidor
         servercounter=0
         while chunk:
-            #iteramos entre 4 servidores que hay
-            """ if servercounter<=4:
-                ip=directions[str(servercounter)]
-                servercounter+=1
-            else:
-                ip=directions[str(servercounter)]
-                servercounter=0 """
+            
             ip=directions[str(servercounter)]
             print(ip)
             servercounter+=1

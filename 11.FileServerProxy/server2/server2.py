@@ -33,7 +33,7 @@ SERVER='server2'
 msg = 'server'
 server = {SERVER:
     {
-        "ip":"tcp://localhost:1111",
+        "ip":"tcp://localhost:1112",
         "storaged":"0",
         "max_storage":"200",
         "running":True,
