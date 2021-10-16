@@ -1,3 +1,9 @@
+
+#todo: -----------------------------------------------------------------------------------
+#leer archivo .torrent con direcciones a los servidores con la ubicacion del archivo
+
+#todo: -----------------------------------------------------------------------------------
+
 import sys
 import hashlib
 
