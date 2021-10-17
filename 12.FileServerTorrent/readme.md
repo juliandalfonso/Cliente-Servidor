@@ -19,6 +19,15 @@ Inicialmente tenemos varios servidores, los cuales generan un string o cadena de
 Este string lo hasheamos y luego lo convertimos a entero (hexa -> decimal)
 este va a ser el rango que comprende las peticiones que podrá responder el servidor
 
+## Ilustración de la arquitectura de los servidores
+
+### Lógica de los servidores
+
+![](../Screenshots/12.arquitectura.png)
+
+### Rango de responsabilidad asignado
+
+cada servidor se hace responsable de un rango de responsabilidad, un numero entre el cero y dos elevado a la 160 [0,2^160]
 
 
-
+![](../Screenshots/12.rango.png)
