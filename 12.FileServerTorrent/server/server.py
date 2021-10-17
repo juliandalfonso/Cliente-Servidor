@@ -39,6 +39,13 @@ print(f'String = {S} \n')
 print(f'Hash = {Shashed} \n')
 print(f'decimal = {dec} \n')
 
+
+def inicializar():
+    port = '8001'
+    server = '1'
+    range = '[0,9]'
+    return port, server, range
+
 #logica del menú para mejor experiencia de usuario
 def menuDatos():
     #borramos la pantalla para mejor interfaz
@@ -51,9 +58,10 @@ def menuDatos():
     
     if selector == '1':
         os.system('cls||clear')
-        print('\nPuerto asignado 8001\n')
-        print('Servidor No: 1\n')
-        print('Rango asignado [0,9]\n')
+        port,server,range = inicializar()
+        print(f'\nPuerto asignado {port}\n')
+        print(f'Servidor No: {server}\n')
+        print(f'Rango asignado {range}\n')
     elif selector == '2':
         pass
     else:
