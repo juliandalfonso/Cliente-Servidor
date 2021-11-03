@@ -92,7 +92,7 @@ def inicializar(server,ip, port):
 
 #funcion que valida la existencia de una ip y un puerto
 def validarExistenciaIP(ip,port):
-    
+    #todo: validar existencia de un servidor
     pass
     
 
