@@ -9,6 +9,8 @@
 #     "port":"4000",
 #     "range":[0,105312291668557186697918027683670432318895095400549111254310977536]}
 # }
+
+#crear socket al inicializar y empezar a escuchar 
 #todo: ----------------------------------------------------
 
 import json
@@ -89,6 +91,7 @@ def inicializar(server,ip, port):
     server = '1'
     range = '[0,2^160]'
     return ipport, server, range
+    
 
 #funcion que valida la existencia de una ip y un puerto
 def validarExistenciaIP(ip,port):
@@ -145,6 +148,7 @@ while True:
     #cargamos la base de datos en DATABASE
     serverdb = leeDB('./serverdb.json')
     menuDatos()
+    #todo: crear conexion socket y escuchar peticiones
 
     #esperamos que el usuario digite enter para volver al menu
     str(input('\n\npresione enter para continuar'))
