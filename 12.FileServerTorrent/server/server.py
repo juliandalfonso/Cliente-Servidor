@@ -32,19 +32,25 @@ S=IP+MAC+PID+RAND
 sha1 = hashlib.sha1()
 sha1.update(S.encode('utf-8')) 
 Shashed= sha1.hexdigest()
-#convertimos a decimal el String Hasheado
+#convertimos a decimal el String Hasheado 
 dec=int(Shashed, 16)
 print(f'String = IP + MAC + PID + RAND \n')
 print(f'String = {S} \n')
 print(f'Hash = {Shashed} \n')
 print(f'decimal = {dec} \n')
 
+#esperamos que el usuario digite enter para volver al menu
+str(input('\n\npresione enter para continuar'))
 
-def inicializar():
-    port = '8001'
+def inicializar(port):
     server = '1'
-    range = '[0,9]'
+    range = '[0,2^160]'
     return port, server, range
+
+#funcion que valida la existencia de una ip y un puerto
+def validarExistenciaIP(ipport):
+    pass
+    
 
 #logica del menú para mejor experiencia de usuario
 def menuDatos():
@@ -58,12 +64,31 @@ def menuDatos():
     
     if selector == '1':
         os.system('cls||clear')
-        port,server,range = inicializar()
-        print(f'\nPuerto asignado {port}\n')
-        print(f'Servidor No: {server}\n')
-        print(f'Rango asignado {range}\n')
+        ipport = str(input('\n ingrese ip:puerto: '))
+        existe = validarExistenciaIP(ipport)
+
+        if existe:
+            print('esta direccion ya esta ocupada')
+        else:
+            
+            ipport,server,range = inicializar(ipport)            
+            print(f'\nAddress: {ipport}\n')
+            print(f'Servidor No: {server}\n')
+            print(f'Rango asignado {range}\n')
+        
     elif selector == '2':
-        pass
+        os.system('cls||clear')
+        ipport = str(input('\n ingrese ip:puerto: '))
+        existe = validarExistenciaIP(ipport)
+
+        if existe:
+            print('esta direccion ya esta ocupada')
+        else:
+            
+            ipport,server,range = inicializar(ipport)            
+            print(f'\nAddress: {ipport}\n')
+            print(f'Servidor No: {server}\n')
+            print(f'Rango asignado {range}\n')
     else:
         print('digite correctamente el comando')
         
