@@ -31,3 +31,10 @@ cada servidor se hace responsable de un rango de responsabilidad, un numero entr
 
 
 ![](../Screenshots/12.rango.png)
+
+![](../Screenshots/logicaServercircular1.png)
+
+![](../Screenshots/logicaServercircular2.png)
+
+![](../Screenshots/logicaServercircular3.png)
+
